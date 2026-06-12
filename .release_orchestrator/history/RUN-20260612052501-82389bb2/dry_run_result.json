@@ -1,0 +1,90 @@
+{
+  "summary": {
+    "dry_run_id": "DRY-PLAN-20260612052501-8e2ad180",
+    "started_at": "2026-06-12T05:25:01Z",
+    "finished_at": "2026-06-12T05:25:01Z",
+    "total_steps": 4,
+    "successful": 0,
+    "failed": 1,
+    "blocked": 0,
+    "skipped": 3,
+    "exit_code": 16,
+    "deployed": {},
+    "notes": "This is a simulated execution - no real systems were contacted."
+  },
+  "steps": [
+    {
+      "step_index": 0,
+      "component_name": "common-utils",
+      "component_version": "2.3.1",
+      "action": "deploy",
+      "status": "failed",
+      "started_at": "2026-06-12T05:25:01Z",
+      "finished_at": "2026-06-12T05:25:01Z",
+      "rollback_target": "2.2.0",
+      "approver": "alice@corp.com",
+      "prerequisites": [],
+      "blockers": [],
+      "logs": [
+        "FAILED: simulated deployment error (roll=0.013)"
+      ]
+    },
+    {
+      "step_index": 1,
+      "component_name": "auth-service",
+      "component_version": "1.5.0",
+      "action": "deploy",
+      "status": "skipped",
+      "started_at": "2026-06-12T05:25:01Z",
+      "finished_at": "2026-06-12T05:25:01Z",
+      "rollback_target": "1.4.2",
+      "approver": "bob@corp.com",
+      "prerequisites": [
+        "common-utils"
+      ],
+      "blockers": [],
+      "logs": [
+        "SKIPPED: prerequisites not met: common-utils"
+      ]
+    },
+    {
+      "step_index": 2,
+      "component_name": "order-service",
+      "component_version": "3.1.0",
+      "action": "deploy",
+      "status": "skipped",
+      "started_at": "2026-06-12T05:25:01Z",
+      "finished_at": "2026-06-12T05:25:01Z",
+      "rollback_target": "3.0.4",
+      "approver": "carol@corp.com",
+      "prerequisites": [
+        "common-utils",
+        "auth-service"
+      ],
+      "blockers": [],
+      "logs": [
+        "SKIPPED: prerequisites not met: common-utils, auth-service"
+      ]
+    },
+    {
+      "step_index": 3,
+      "component_name": "payment-service",
+      "component_version": "2.0.2",
+      "action": "deploy",
+      "status": "skipped",
+      "started_at": "2026-06-12T05:25:01Z",
+      "finished_at": "2026-06-12T05:25:01Z",
+      "rollback_target": "2.0.1",
+      "approver": "dave@corp.com",
+      "prerequisites": [
+        "common-utils",
+        "order-service"
+      ],
+      "blockers": [],
+      "logs": [
+        "SKIPPED: prerequisites not met: common-utils, order-service"
+      ]
+    }
+  ],
+  "logs": []
+}

@@ -383,6 +383,8 @@ class ExecutionSnapshot:
     exit_code: int = 0
     config_snapshot: Optional[Dict[str, Any]] = None
     manifest_snapshot: Optional[Dict[str, Any]] = None
+    policy_snapshot: Optional[Dict[str, Any]] = None
+    policy_summary: Optional[Dict[str, Any]] = None
     validation_result: Optional[Dict[str, Any]] = None
     release_plan: Optional[Dict[str, Any]] = None
     rollback_plan: Optional[Dict[str, Any]] = None
@@ -403,6 +405,8 @@ class ExecutionSnapshot:
             exit_code=data.get("exit_code", 0),
             config_snapshot=data.get("config_snapshot"),
             manifest_snapshot=data.get("manifest_snapshot"),
+            policy_snapshot=data.get("policy_snapshot"),
+            policy_summary=data.get("policy_summary"),
             validation_result=data.get("validation_result"),
             release_plan=data.get("release_plan"),
             rollback_plan=data.get("rollback_plan"),

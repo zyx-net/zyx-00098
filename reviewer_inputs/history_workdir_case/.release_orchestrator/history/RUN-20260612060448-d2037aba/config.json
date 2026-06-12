@@ -1,0 +1,14 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": "reviewer_inputs\\history_workdir_case",
+    "command": "validate",
+    "manifest": "reviewer_inputs\\manifest_a.json",
+    "policy": null,
+    "no_checksum": false,
+    "strict": false,
+    "func": "<function _run at 0x0000020D362F5380>"
+  },
+  "command": "validate",
+  "run_id": "RUN-20260612060448-d2037aba"
+}

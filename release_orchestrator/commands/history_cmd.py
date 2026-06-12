@@ -114,6 +114,8 @@ def _show_run(args: argparse.Namespace) -> CommandResult:
     print(f"\nArtifacts present:")
     _section("Config snapshot", snap.config_snapshot is not None)
     _section("Manifest snapshot", snap.manifest_snapshot is not None)
+    _section("Policy snapshot", snap.policy_snapshot is not None)
+    _section("Policy summary", snap.policy_summary is not None)
     _section("Validation result", snap.validation_result is not None)
     _section("Release plan", snap.release_plan is not None)
     _section("Rollback plan", snap.rollback_plan is not None)
@@ -134,6 +136,18 @@ def _show_run(args: argparse.Namespace) -> CommandResult:
         blocked = rp.get("blocked_components", [])
         if blocked:
             print(f"Blocked components: {len(blocked)}")
+
+    if snap.policy_summary:
+        ps = snap.policy_summary
+        print(f"\nPolicy summary:")
+        print(f"  Target environment : {ps.get('target_environment', 'unknown')}")
+        print(f"  Policy version     : {ps.get('policy_version', 'unknown')}")
+        rules = ps.get("rules_applied", [])
+        print(f"  Rules applied      : {', '.join(rules) if rules else '(none)'}")
+        if ps.get("warnings"):
+            print(f"  Policy warnings    : {len(ps['warnings'])}")
+            for w in ps["warnings"][:3]:
+                print(f"    - {w}")
 
     if args.show_logs:
         log_path = Path(snap.get("run_dir", "")) / LOG_FILE if False else None

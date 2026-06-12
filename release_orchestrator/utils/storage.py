@@ -38,6 +38,8 @@ HISTORY_DIR = "history"
 SNAPSHOT_FILE = "snapshot.json"
 LOG_FILE = "run.log"
 MANIFEST_SNAPSHOT_FILE = "manifest_snapshot.json"
+POLICY_SNAPSHOT_FILE = "policy_snapshot.json"
+POLICY_SUMMARY_FILE = "policy_summary.json"
 VALIDATION_FILE = "validation.json"
 PLAN_FILE = "release_plan.json"
 ROLLBACK_PLAN_FILE = "rollback_plan.json"
@@ -109,6 +111,8 @@ def persist_run_artifacts(
     exit_code: int,
     config_snapshot: Optional[Dict[str, Any]] = None,
     manifest_snapshot: Optional[Dict[str, Any]] = None,
+    policy_snapshot: Optional[Dict[str, Any]] = None,
+    policy_summary: Optional[Dict[str, Any]] = None,
     validation_result: Optional[Dict[str, Any]] = None,
     release_plan: Optional[Dict[str, Any]] = None,
     rollback_plan: Optional[Dict[str, Any]] = None,
@@ -123,6 +127,10 @@ def persist_run_artifacts(
 
     if manifest_snapshot is not None:
         save_json(manifest_snapshot, run_dir / MANIFEST_SNAPSHOT_FILE)
+    if policy_snapshot is not None:
+        save_json(policy_snapshot, run_dir / POLICY_SNAPSHOT_FILE)
+    if policy_summary is not None:
+        save_json(policy_summary, run_dir / POLICY_SUMMARY_FILE)
     if validation_result is not None:
         save_json(validation_result, run_dir / VALIDATION_FILE)
     if release_plan is not None:
@@ -145,6 +153,8 @@ def persist_run_artifacts(
         exit_code=exit_code,
         config_snapshot=config_snapshot,
         manifest_snapshot=manifest_snapshot,
+        policy_snapshot=policy_snapshot,
+        policy_summary=policy_summary,
         validation_result=validation_result,
         release_plan=release_plan,
         rollback_plan=rollback_plan,

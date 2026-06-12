@@ -24,6 +24,7 @@ from .models import (
     compute_checksum,
     now_iso,
 )
+from .policy import EnvironmentPolicy, ReleasePolicy, default_policy
 from ..utils.logger import get_logger
 from ..utils.exit_codes import (
     EXIT_APPROVAL_MISSING,
@@ -39,12 +40,21 @@ MODULE = "validator"
 class ValidationEngine:
     """Executes all validation rules against a release manifest."""
 
-    def __init__(self, manifest: ReleaseManifest):
+    def __init__(self, manifest: ReleaseManifest, policy: Optional[ReleasePolicy] = None):
         self.manifest = manifest
+        self.policy: ReleasePolicy = policy if policy is not None else default_policy()
         self.issues: List[ValidationIssue] = []
         self._components_by_name: Dict[str, Component] = {
             c.name: c for c in manifest.components
         }
+        env_name = (
+            manifest.target_environment.value
+            if isinstance(manifest.target_environment, EnvironmentType)
+            else str(manifest.target_environment)
+        )
+        self.env_policy: EnvironmentPolicy = self.policy.get_env_policy(env_name)
+        self.policy_warnings: List[str] = []
+        self._check_policy_components()
 
     def add_issue(
         self,
@@ -107,9 +117,28 @@ class ValidationEngine:
             return EXIT_CHECKSUM_MISMATCH.code
         if "APPROVAL_MISSING" in codes:
             return EXIT_APPROVAL_MISSING.code
+        if "POLICY_CONFLICT" in codes:
+            return EXIT_CONFIG_ERROR.code
         if codes:
             return 12
         return 0
+
+    def _check_policy_components(self) -> None:
+        """Validate that policy-referenced components exist in the manifest."""
+        manifest_names = set(self._components_by_name.keys())
+        for comp_name in self.env_policy.skip_checksum_components:
+            if comp_name not in manifest_names:
+                msg = (
+                    f"Policy skip_checksum_components references unknown component "
+                    f"'{comp_name}' for target environment"
+                )
+                self.policy_warnings.append(msg)
+                self.add_issue(
+                    Severity.WARNING,
+                    "POLICY_UNKNOWN_COMPONENT",
+                    msg,
+                    component=comp_name,
+                )
 
     # --- individual check methods ---
 
@@ -168,6 +197,7 @@ class ValidationEngine:
             )
 
     def _check_version_downgrades(self) -> None:
+        allow_downgrade = self.env_policy.allow_version_downgrade
         for c in self.manifest.components:
             if not c.deployed_version:
                 self.add_issue(
@@ -179,13 +209,22 @@ class ValidationEngine:
                 continue
             cmp = compare_versions(c.version, c.deployed_version)
             if cmp < 0:
-                self.add_issue(
-                    Severity.ERROR,
-                    "VERSION_DOWNGRADE",
-                    f"Version downgrade for {c.name}: {c.deployed_version} -> {c.version}",
-                    component=c.name,
-                    details={"from": c.deployed_version, "to": c.version},
-                )
+                if allow_downgrade:
+                    self.add_issue(
+                        Severity.INFO,
+                        "VERSION_DOWNGRADE_ALLOWED",
+                        f"Version downgrade for {c.name}: {c.deployed_version} -> {c.version} (allowed by policy)",
+                        component=c.name,
+                        details={"from": c.deployed_version, "to": c.version, "policy": "allow_version_downgrade"},
+                    )
+                else:
+                    self.add_issue(
+                        Severity.ERROR,
+                        "VERSION_DOWNGRADE",
+                        f"Version downgrade for {c.name}: {c.deployed_version} -> {c.version}",
+                        component=c.name,
+                        details={"from": c.deployed_version, "to": c.version},
+                    )
             elif cmp == 0:
                 self.add_issue(
                     Severity.WARNING,
@@ -235,7 +274,17 @@ class ValidationEngine:
 
     def _verify_checksums(self) -> None:
         import os
+        skip_components = set(self.env_policy.skip_checksum_components)
         for c in self.manifest.components:
+            if c.name in skip_components:
+                self.add_issue(
+                    Severity.INFO,
+                    "CHECKSUM_SKIPPED_BY_POLICY",
+                    f"Checksum verification skipped for {c.name} by policy",
+                    component=c.name,
+                    details={"policy": "skip_checksum_components"},
+                )
+                continue
             art = c.artifact
             if not art.path or not art.checksum:
                 self.add_issue(
@@ -285,23 +334,31 @@ class ValidationEngine:
                 )
 
     def _verify_approvals(self) -> None:
+        require_approval = self.env_policy.require_approval
+        if not require_approval:
+            for c in self.manifest.components:
+                approved = [a for a in c.approvals if a.status == ApprovalStatus.APPROVED]
+                if approved:
+                    approvers = [a.approver for a in approved]
+                    self.add_issue(
+                        Severity.INFO,
+                        "APPROVAL_OPTIONAL",
+                        f"Component {c.name} has {len(approved)} approval(s) (approval not required by policy)",
+                        component=c.name,
+                        details={"approvers": approvers},
+                    )
+            return
+
         env = self.manifest.target_environment
-        needs_approval = env in (EnvironmentType.PRODUCTION, EnvironmentType.STAGING)
         for c in self.manifest.components:
-            if c.environment in (EnvironmentType.PRODUCTION, EnvironmentType.STAGING):
-                comp_needs = True
-            else:
-                comp_needs = needs_approval
-            if not comp_needs:
-                continue
             approved = [a for a in c.approvals if a.status == ApprovalStatus.APPROVED]
             if not approved:
                 self.add_issue(
                     Severity.ERROR,
                     "APPROVAL_MISSING",
-                    f"Component {c.name} ({c.environment.value}) has no APPROVED approval record",
+                    f"Component {c.name} ({c.environment.value}) has no APPROVED approval record (required by policy)",
                     component=c.name,
-                    details={"approvals_count": len(c.approvals)},
+                    details={"approvals_count": len(c.approvals), "policy": "require_approval"},
                 )
             else:
                 approvers = [a.approver for a in approved]

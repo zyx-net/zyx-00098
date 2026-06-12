@@ -18,6 +18,7 @@ from ..utils.exit_codes import (
     EXIT_OK,
 )
 from ..utils.logger import get_logger
+from ..utils.policy_loader import PolicyValidationError, evaluate_policy, load_policy
 from ..utils.storage import (
     export_full_manifest_archive,
     get_snapshot,
@@ -32,6 +33,8 @@ def add_parser(subparsers: "argparse._SubParsersAction") -> None:
     p = subparsers.add_parser("export", help="Export manifest + all artifacts into an archive")
     p.add_argument("-m", "--manifest", default="examples/sample_manifest.json",
                    help="Path to manifest JSON")
+    p.add_argument("--policy", default=None,
+                   help="Path to release policy JSON file")
     p.add_argument("-o", "--output", default="archives/release_bundle",
                    help="Output archive path (without extension)")
     p.add_argument("--format", choices=["zip", "tar", "tar.gz"], default="zip",
@@ -55,7 +58,23 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
         LOG.error(MODULE, f"Invalid manifest: {exc}")
         return CommandResult(exit_code=EXIT_CONFIG_ERROR.code, run_id="")
 
-    engine = ValidationEngine(manifest)
+    try:
+        policy = load_policy(args.policy, work_dir=getattr(args, "work_dir", None))
+    except FileNotFoundError as exc:
+        LOG.error(MODULE, str(exc))
+        print(f"ERROR: {exc}")
+        return CommandResult(exit_code=EXIT_FILE_NOT_FOUND.code, run_id="")
+    except PolicyValidationError as exc:
+        LOG.error(MODULE, f"Invalid policy: {exc}")
+        print(f"ERROR: Invalid policy: {exc}")
+        for err in exc.errors:
+            print(f"  - {err}")
+        return CommandResult(exit_code=EXIT_CONFIG_ERROR.code, run_id="")
+
+    policy_dict = policy.to_dict()
+    policy_summary = evaluate_policy(policy, manifest)
+
+    engine = ValidationEngine(manifest, policy=policy)
     validation = engine.validate()
     validation_dict = validation.to_dict()
 
@@ -67,9 +86,37 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
     rollback_dict = rollback.to_dict()
 
     dry_run_result = None
+    dry_run_failed = False
     if not args.no_dryrun:
         executor = DryRunExecutor(manifest, plan, seed=args.seed)
         dry_run_result = executor.execute()
+        dry_summary = dry_run_result.get("summary", {})
+        dry_run_failed = dry_summary.get("exit_code", 0) != 0
+
+    dry_run_blocks_export = policy.get_env_policy(
+        manifest.target_environment.value
+        if hasattr(manifest.target_environment, "value")
+        else str(manifest.target_environment)
+    ).dry_run_failure_blocks_export
+
+    if dry_run_failed and dry_run_blocks_export:
+        LOG.error(
+            MODULE,
+            "Dry-run failed and policy blocks export on dry-run failure",
+        )
+        print("\nERROR: Dry-run failed. Policy prevents export when dry-run fails.")
+        print(f"  Failed steps: {dry_summary.get('failed', 0)}")
+        print(f"  Blocked steps: {dry_summary.get('blocked', 0)}")
+        return CommandResult(
+            exit_code=EXIT_EXPORT_ERROR.code,
+            run_id="",
+            manifest_snapshot=manifest.to_dict(),
+            validation_result=validation_dict,
+            release_plan=plan_dict,
+            rollback_plan=rollback_dict,
+            dry_run_result=dry_run_result,
+            extra_artifacts={"policy_snapshot": policy_dict},
+        )
 
     # Snapshot the config and log text BEFORE we append any extra export-
     # related log lines, so the values written to the zip match what
@@ -84,6 +131,8 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
     log_text = get_logger().get_text()
 
     extra = {
+        "policy.json": policy_dict,
+        "policy_summary.json": policy_summary,
         "validation.json": validation_dict,
         "release_plan.json": plan_dict,
         "rollback_plan.json": rollback_dict,
@@ -109,6 +158,7 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
                 release_plan=plan_dict,
                 rollback_plan=rollback_dict,
                 dry_run_result=dry_run_result,
+                extra_artifacts={"policy_snapshot": policy_dict},
             )
 
         current_snap = ExecutionSnapshot(
@@ -153,11 +203,15 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
             release_plan=plan_dict,
             rollback_plan=rollback_dict,
             dry_run_result=dry_run_result,
+            extra_artifacts={"policy_snapshot": policy_dict},
         )
 
     print(f"\n=== Export Complete ===")
     print(f"Manifest      : {manifest.release_id}")
     print(f"Components    : {len(manifest.components)}")
+    print(f"Policy        : {policy.policy_version}")
+    print(f"  Env rules   : {', '.join(policy.list_known_environments())}")
+    print(f"  Dry-run blocks export: {dry_run_blocks_export}")
     print(f"Archive       : {archive_path}")
     print(f"Format        : {args.format}")
     print(f"Included files:")
@@ -171,6 +225,14 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
         if warns:
             print(f"  Warnings     : {len(warns)}")
 
+    extra_artifacts = {
+        "archive_path": str(archive_path),
+        "policy_snapshot": policy_dict,
+        "policy_summary": policy_summary,
+    }
+    if compare_report:
+        extra_artifacts["compare_report"] = compare_report
+
     return CommandResult(
         exit_code=exit_code,
         run_id="",
@@ -179,8 +241,5 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
         release_plan=plan_dict,
         rollback_plan=rollback_dict,
         dry_run_result=dry_run_result,
-        extra_artifacts={
-            "archive_path": str(archive_path),
-            "compare_report": compare_report,
-        } if compare_report else {"archive_path": str(archive_path)},
+        extra_artifacts=extra_artifacts,
     )

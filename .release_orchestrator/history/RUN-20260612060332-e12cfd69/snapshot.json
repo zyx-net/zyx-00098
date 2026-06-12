@@ -1,0 +1,809 @@
+{
+  "run_id": "RUN-20260612060332-e12cfd69",
+  "command": "dry-run",
+  "started_at": "2026-06-12T06:03:32Z",
+  "finished_at": "2026-06-12T06:03:32Z",
+  "exit_code": 4,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "dry-run",
+      "manifest": "examples/sample_manifest.json",
+      "policy": "test_policies/dev_policy.json",
+      "seed": 42,
+      "fail_step": null,
+      "func": "<function _run at 0x0000024433E728D0>"
+    },
+    "command": "dry-run",
+    "run_id": "RUN-20260612060332-e12cfd69"
+  },
+  "manifest_snapshot": {
+    "manifest_version": "1.0",
+    "release_id": "REL-20260612020904-aabe7305",
+    "title": "Q3 Offline Release Bundle",
+    "target_environment": "production",
+    "scheduled_date": "2026-06-13",
+    "components": [
+      {
+        "name": "common-utils",
+        "version": "2.3.1",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\common-utils-2.3.1.pkg",
+          "checksum": "5326bbfabb57c6ef8f126d32b85dc449e711ba5df4d0bf84141b88eb0d7d7733",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 28
+        },
+        "dependencies": [],
+        "approvals": [
+          {
+            "approver": "alice@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-07T02:09:04Z",
+            "comment": "Approved by alice@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "2.2.0",
+        "description": "Shared utilities library - base dependency for all services.",
+        "rollback_target_version": "2.2.0",
+        "tags": [
+          "shared",
+          "libs"
+        ]
+      },
+      {
+        "name": "auth-service",
+        "version": "1.5.0",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\auth-service-1.5.0.pkg",
+          "checksum": "cde54063b74d99da85d0101c046a0c82b01904fbe96d11341358e3fa965ed75d",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 28
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "2.3.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "bob@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-09T02:09:04Z",
+            "comment": "Approved by bob@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "1.4.2",
+        "description": "Authentication and SSO service.",
+        "rollback_target_version": "1.4.2",
+        "tags": [
+          "core",
+          "security"
+        ]
+      },
+      {
+        "name": "order-service",
+        "version": "3.1.0",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\order-service-3.1.0.pkg",
+          "checksum": "345471e034b3650a46a17765d762a5c8eb6f26a6fb5c051f67dac29a4f97129a",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 29
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "2.3.0",
+            "max_version": null,
+            "required": true
+          },
+          {
+            "name": "auth-service",
+            "min_version": "1.5.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "carol@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-11T02:09:04Z",
+            "comment": "Approved by carol@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "3.0.4",
+        "description": "Order management micro-service.",
+        "rollback_target_version": "3.0.4",
+        "tags": [
+          "business"
+        ]
+      },
+      {
+        "name": "payment-service",
+        "version": "2.0.2",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\payment-service-2.0.2.pkg",
+          "checksum": "0352801879459dbefc57b30d01583803db81cfbe1584597f773d4c7d99b21680",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 31
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "2.2.0",
+            "max_version": null,
+            "required": true
+          },
+          {
+            "name": "order-service",
+            "min_version": "3.0.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "dave@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-11T02:09:04Z",
+            "comment": "Approved by dave@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "2.0.1",
+        "description": "Payment processing service (PCI-DSS compliant).",
+        "rollback_target_version": "2.0.1",
+        "tags": [
+          "pci",
+          "payment"
+        ]
+      },
+      {
+        "name": "legacy-reporting",
+        "version": "1.0.3",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\legacy-reporting-1.0.3.pkg",
+          "checksum": "02b60b3b9ed309b730abc7006e62bf07ad5b911bc8ae57c4cf001bad35819e7a",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 32
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "1.0.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [],
+        "deployed_version": "1.1.0",
+        "description": "(INTENTIONAL ERROR) Version downgrade + missing approval + bad checksum.",
+        "rollback_target_version": "1.0.9",
+        "tags": [
+          "legacy",
+          "error-demo"
+        ]
+      }
+    ],
+    "description": "Sample offline release manifest generated by `release-orchestrator init`.",
+    "created_by": "release-orchestrator",
+    "created_at": "2026-06-12T02:09:04Z"
+  },
+  "policy_snapshot": {
+    "policy_version": "1.0",
+    "default_environment": "staging",
+    "env_rules": {
+      "staging": {
+        "require_approval": false,
+        "allow_version_downgrade": true,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": false
+      }
+    }
+  },
+  "policy_summary": null,
+  "validation_result": {
+    "timestamp": "2026-06-12T06:03:32Z",
+    "passed": false,
+    "issues": [
+      {
+        "component": "legacy-reporting",
+        "severity": "info",
+        "issue_code": "VERSION_DOWNGRADE_ALLOWED",
+        "message": "Version downgrade for legacy-reporting: 1.1.0 -> 1.0.3 (allowed by policy)",
+        "details": {
+          "from": "1.1.0",
+          "to": "1.0.3",
+          "policy": "allow_version_downgrade"
+        }
+      },
+      {
+        "component": "common-utils",
+        "severity": "info",
+        "issue_code": "CHECKSUM_OK",
+        "message": "Checksum verified OK for common-utils",
+        "details": null
+      },
+      {
+        "component": "auth-service",
+        "severity": "info",
+        "issue_code": "CHECKSUM_OK",
+        "message": "Checksum verified OK for auth-service",
+        "details": null
+      },
+      {
+        "component": "order-service",
+        "severity": "info",
+        "issue_code": "CHECKSUM_OK",
+        "message": "Checksum verified OK for order-service",
+        "details": null
+      },
+      {
+        "component": "payment-service",
+        "severity": "info",
+        "issue_code": "CHECKSUM_OK",
+        "message": "Checksum verified OK for payment-service",
+        "details": null
+      },
+      {
+        "component": "legacy-reporting",
+        "severity": "error",
+        "issue_code": "CHECKSUM_MISMATCH",
+        "message": "Checksum mismatch for legacy-reporting: expected 02b60b3b9ed309b730abc7006e62bf07ad5b911bc8ae57c4cf001bad35819e7a, got 97d66da2e07e58160ed86fdbb35affe30a46053a4e43efcb74c1629cd54b7ab3",
+        "details": {
+          "expected": "02b60b3b9ed309b730abc7006e62bf07ad5b911bc8ae57c4cf001bad35819e7a",
+          "actual": "97d66da2e07e58160ed86fdbb35affe30a46053a4e43efcb74c1629cd54b7ab3",
+          "algorithm": "sha256"
+        }
+      },
+      {
+        "component": "common-utils",
+        "severity": "info",
+        "issue_code": "APPROVAL_OPTIONAL",
+        "message": "Component common-utils has 1 approval(s) (approval not required by policy)",
+        "details": {
+          "approvers": [
+            "alice@corp.com"
+          ]
+        }
+      },
+      {
+        "component": "auth-service",
+        "severity": "info",
+        "issue_code": "APPROVAL_OPTIONAL",
+        "message": "Component auth-service has 1 approval(s) (approval not required by policy)",
+        "details": {
+          "approvers": [
+            "bob@corp.com"
+          ]
+        }
+      },
+      {
+        "component": "order-service",
+        "severity": "info",
+        "issue_code": "APPROVAL_OPTIONAL",
+        "message": "Component order-service has 1 approval(s) (approval not required by policy)",
+        "details": {
+          "approvers": [
+            "carol@corp.com"
+          ]
+        }
+      },
+      {
+        "component": "payment-service",
+        "severity": "info",
+        "issue_code": "APPROVAL_OPTIONAL",
+        "message": "Component payment-service has 1 approval(s) (approval not required by policy)",
+        "details": {
+          "approvers": [
+            "dave@corp.com"
+          ]
+        }
+      }
+    ],
+    "summary": {
+      "total": 10,
+      "errors": 1,
+      "warnings": 0,
+      "infos": 9
+    }
+  },
+  "release_plan": {
+    "plan_id": "PLAN-20260612060332-78038d9c",
+    "release_id": "REL-20260612020904-aabe7305",
+    "generated_at": "2026-06-12T06:03:32Z",
+    "target_environment": "production",
+    "execution_order": [
+      "common-utils",
+      "auth-service",
+      "legacy-reporting",
+      "order-service",
+      "payment-service"
+    ],
+    "steps": [
+      {
+        "step_index": 0,
+        "component_name": "common-utils",
+        "component_version": "2.3.1",
+        "action": "deploy",
+        "prerequisites": [],
+        "blockers": [],
+        "approver": "alice@corp.com",
+        "rollback_target": "2.2.0",
+        "status": "scheduled",
+        "estimated_duration_minutes": 5,
+        "notes": "Shared utilities library - base dependency for all services."
+      },
+      {
+        "step_index": 1,
+        "component_name": "auth-service",
+        "component_version": "1.5.0",
+        "action": "deploy",
+        "prerequisites": [
+          "common-utils"
+        ],
+        "blockers": [],
+        "approver": "bob@corp.com",
+        "rollback_target": "1.4.2",
+        "status": "scheduled",
+        "estimated_duration_minutes": 5,
+        "notes": "Authentication and SSO service."
+      },
+      {
+        "step_index": 2,
+        "component_name": "legacy-reporting",
+        "component_version": "1.0.3",
+        "action": "deploy",
+        "prerequisites": [
+          "common-utils"
+        ],
+        "blockers": [
+          "Missing required production approval"
+        ],
+        "approver": null,
+        "rollback_target": "1.0.9",
+        "status": "blocked",
+        "estimated_duration_minutes": 5,
+        "notes": "(INTENTIONAL ERROR) Version downgrade + missing approval + bad checksum."
+      },
+      {
+        "step_index": 3,
+        "component_name": "order-service",
+        "component_version": "3.1.0",
+        "action": "deploy",
+        "prerequisites": [
+          "common-utils",
+          "auth-service"
+        ],
+        "blockers": [],
+        "approver": "carol@corp.com",
+        "rollback_target": "3.0.4",
+        "status": "scheduled",
+        "estimated_duration_minutes": 6,
+        "notes": "Order management micro-service."
+      },
+      {
+        "step_index": 4,
+        "component_name": "payment-service",
+        "component_version": "2.0.2",
+        "action": "deploy",
+        "prerequisites": [
+          "common-utils",
+          "order-service"
+        ],
+        "blockers": [],
+        "approver": "dave@corp.com",
+        "rollback_target": "2.0.1",
+        "status": "scheduled",
+        "estimated_duration_minutes": 6,
+        "notes": "Payment processing service (PCI-DSS compliant)."
+      }
+    ],
+    "blocked_components": [
+      {
+        "component": "legacy-reporting",
+        "version": "1.0.3",
+        "blockers": [
+          "Missing required production approval"
+        ]
+      }
+    ],
+    "total_estimated_minutes": 27
+  },
+  "rollback_plan": null,
+  "dry_run_result": {
+    "summary": {
+      "dry_run_id": "DRY-PLAN-20260612060332-78038d9c",
+      "started_at": "2026-06-12T06:03:32Z",
+      "finished_at": "2026-06-12T06:03:32Z",
+      "total_steps": 5,
+      "successful": 4,
+      "failed": 0,
+      "blocked": 1,
+      "skipped": 0,
+      "exit_code": 0,
+      "deployed": {
+        "common-utils": "2.3.1",
+        "auth-service": "1.5.0",
+        "order-service": "3.1.0",
+        "payment-service": "2.0.2"
+      },
+      "notes": "This is a simulated execution - no real systems were contacted."
+    },
+    "steps": [
+      {
+        "step_index": 0,
+        "component_name": "common-utils",
+        "component_version": "2.3.1",
+        "action": "deploy",
+        "status": "success",
+        "started_at": "2026-06-12T06:03:32Z",
+        "finished_at": "2026-06-12T06:03:32Z",
+        "rollback_target": "2.2.0",
+        "approver": "alice@corp.com",
+        "prerequisites": [],
+        "blockers": [],
+        "logs": [
+          "Applying: common-utils@2.3.1",
+          "Stored rollback target: 2.2.0",
+          "Release approved by: alice@corp.com",
+          "SUCCESS: common-utils deployed in simulated environment"
+        ]
+      },
+      {
+        "step_index": 1,
+        "component_name": "auth-service",
+        "component_version": "1.5.0",
+        "action": "deploy",
+        "status": "success",
+        "started_at": "2026-06-12T06:03:32Z",
+        "finished_at": "2026-06-12T06:03:32Z",
+        "rollback_target": "1.4.2",
+        "approver": "bob@corp.com",
+        "prerequisites": [
+          "common-utils"
+        ],
+        "blockers": [],
+        "logs": [
+          "Applying: auth-service@1.5.0",
+          "Stored rollback target: 1.4.2",
+          "Release approved by: bob@corp.com",
+          "SUCCESS: auth-service deployed in simulated environment"
+        ]
+      },
+      {
+        "step_index": 2,
+        "component_name": "legacy-reporting",
+        "component_version": "1.0.3",
+        "action": "deploy",
+        "status": "blocked",
+        "started_at": "2026-06-12T06:03:32Z",
+        "finished_at": "2026-06-12T06:03:32Z",
+        "rollback_target": "1.0.9",
+        "approver": null,
+        "prerequisites": [
+          "common-utils"
+        ],
+        "blockers": [
+          "Missing required production approval"
+        ],
+        "logs": [
+          "BLOCKED: Missing required production approval"
+        ]
+      },
+      {
+        "step_index": 3,
+        "component_name": "order-service",
+        "component_version": "3.1.0",
+        "action": "deploy",
+        "status": "success",
+        "started_at": "2026-06-12T06:03:32Z",
+        "finished_at": "2026-06-12T06:03:32Z",
+        "rollback_target": "3.0.4",
+        "approver": "carol@corp.com",
+        "prerequisites": [
+          "common-utils",
+          "auth-service"
+        ],
+        "blockers": [],
+        "logs": [
+          "Applying: order-service@3.1.0",
+          "Stored rollback target: 3.0.4",
+          "Release approved by: carol@corp.com",
+          "SUCCESS: order-service deployed in simulated environment"
+        ]
+      },
+      {
+        "step_index": 4,
+        "component_name": "payment-service",
+        "component_version": "2.0.2",
+        "action": "deploy",
+        "status": "success",
+        "started_at": "2026-06-12T06:03:32Z",
+        "finished_at": "2026-06-12T06:03:32Z",
+        "rollback_target": "2.0.1",
+        "approver": "dave@corp.com",
+        "prerequisites": [
+          "common-utils",
+          "order-service"
+        ],
+        "blockers": [],
+        "logs": [
+          "Applying: payment-service@2.0.2",
+          "Stored rollback target: 2.0.1",
+          "Release approved by: dave@corp.com",
+          "SUCCESS: payment-service deployed in simulated environment"
+        ]
+      }
+    ],
+    "logs": []
+  },
+  "logs": [
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[dry-run] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612060332-e12cfd69"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from examples/sample_manifest.json",
+      "extra": {
+        "components": 5
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "policy_loader",
+      "message": "Loading policy from explicit path",
+      "extra": {
+        "path": "test_policies\\dev_policy.json"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "policy_loader",
+      "message": "Policy loaded successfully",
+      "extra": {
+        "policy_version": "1.0",
+        "environments": 1
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "Starting validation",
+      "extra": {
+        "release_id": "REL-20260612020904-aabe7305"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[VERSION_DOWNGRADE_ALLOWED] Version downgrade for legacy-reporting: 1.1.0 -> 1.0.3 (allowed by policy)",
+      "extra": {
+        "component": "legacy-reporting"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[CHECKSUM_OK] Checksum verified OK for common-utils",
+      "extra": {
+        "component": "common-utils"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[CHECKSUM_OK] Checksum verified OK for auth-service",
+      "extra": {
+        "component": "auth-service"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[CHECKSUM_OK] Checksum verified OK for order-service",
+      "extra": {
+        "component": "order-service"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[CHECKSUM_OK] Checksum verified OK for payment-service",
+      "extra": {
+        "component": "payment-service"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "ERROR",
+      "module": "validator",
+      "message": "[CHECKSUM_MISMATCH] Checksum mismatch for legacy-reporting: expected 02b60b3b9ed309b730abc7006e62bf07ad5b911bc8ae57c4cf001bad35819e7a, got 97d66da2e07e58160ed86fdbb35affe30a46053a4e43efcb74c1629cd54b7ab3",
+      "extra": {
+        "component": "legacy-reporting"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[APPROVAL_OPTIONAL] Component common-utils has 1 approval(s) (approval not required by policy)",
+      "extra": {
+        "component": "common-utils"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[APPROVAL_OPTIONAL] Component auth-service has 1 approval(s) (approval not required by policy)",
+      "extra": {
+        "component": "auth-service"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[APPROVAL_OPTIONAL] Component order-service has 1 approval(s) (approval not required by policy)",
+      "extra": {
+        "component": "order-service"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[APPROVAL_OPTIONAL] Component payment-service has 1 approval(s) (approval not required by policy)",
+      "extra": {
+        "component": "payment-service"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "Validation complete",
+      "extra": {
+        "passed": false,
+        "total": 10,
+        "errors": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "planner",
+      "message": "Generating release plan",
+      "extra": {
+        "release_id": "REL-20260612020904-aabe7305"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "planner",
+      "message": "Release plan generated",
+      "extra": {
+        "plan_id": "PLAN-20260612060332-78038d9c",
+        "steps": 5,
+        "blocked": 1,
+        "total_minutes": 27
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "dryrun",
+      "message": "Starting dry-run simulation",
+      "extra": {
+        "plan_id": "PLAN-20260612060332-78038d9c"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "dryrun",
+      "message": "Step success",
+      "extra": {
+        "step": 0,
+        "component": "common-utils",
+        "version": "2.3.1"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "dryrun",
+      "message": "Step success",
+      "extra": {
+        "step": 1,
+        "component": "auth-service",
+        "version": "1.5.0"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "WARNING",
+      "module": "dryrun",
+      "message": "Step blocked",
+      "extra": {
+        "step": 2,
+        "component": "legacy-reporting",
+        "blockers": [
+          "Missing required production approval"
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "dryrun",
+      "message": "Step success",
+      "extra": {
+        "step": 3,
+        "component": "order-service",
+        "version": "3.1.0"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "dryrun",
+      "message": "Step success",
+      "extra": {
+        "step": 4,
+        "component": "payment-service",
+        "version": "2.0.2"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "dryrun",
+      "message": "Dry-run complete",
+      "extra": {
+        "successful": 4,
+        "failed": 0,
+        "blocked": 1,
+        "exit_code": 0
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:32Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[dry-run] Finished",
+      "extra": {
+        "run_id": "RUN-20260612060332-e12cfd69",
+        "exit_code": 4
+      }
+    }
+  ],
+  "archive_path": null
+}

@@ -746,6 +746,329 @@ if len(all_runs) >= 2:
 
 
 # ---------------------------------------------------------------------------
+# Section 13: Policy CLI tests - default policy + explicit policy
+# ---------------------------------------------------------------------------
+print()
+print("Section 13: Policy - default and explicit CLI policy")
+print("-" * 60)
+
+manifest_path = ROOT / "examples" / "clean_manifest.json"
+if not manifest_path.exists():
+    subprocess.run(
+        [sys.executable, "-m", "release_orchestrator", "init",
+         "-o", str(manifest_path), "--no-errors", "--env", "staging", "--clean"],
+        cwd=str(ROOT), capture_output=True, text=True,
+    )
+
+# 13a - validate with default policy (should use built-in defaults)
+proc_def = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "validate",
+     "-m", str(manifest_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("validate with default policy exits 0",
+      proc_def.returncode == 0,
+      f"exit={proc_def.returncode}")
+check("validate output mentions policy version or env rules",
+      "Policy" in proc_def.stdout or "policy" in proc_def.stdout,
+      f"stdout_preview={proc_def.stdout[:200]!r}")
+
+# 13b - create a custom policy file and use it explicitly
+policy_dir = ROOT / "test_policies"
+policy_dir.mkdir(exist_ok=True)
+custom_policy = {
+    "policy_version": "1.0",
+    "default_environment": "staging",
+    "env_rules": {
+        "staging": {
+            "require_approval": False,
+            "allow_version_downgrade": True,
+            "skip_checksum_components": [],
+            "dry_run_failure_blocks_export": False,
+        }
+    }
+}
+custom_policy_path = policy_dir / "dev_policy.json"
+custom_policy_path.write_text(json.dumps(custom_policy, indent=2), encoding="utf-8")
+
+proc_exp = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "validate",
+     "-m", str(manifest_path), "--policy", str(custom_policy_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("validate with explicit --policy exits 0",
+      proc_exp.returncode == 0,
+      f"exit={proc_exp.returncode} stderr={proc_exp.stderr[:100]}")
+
+# 13c - policy with nonexistent file should error
+proc_bad_policy = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "validate",
+     "-m", str(manifest_path), "--policy", "/nonexistent/policy.json"],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("validate with nonexistent --policy exits FILE_NOT_FOUND (11)",
+      proc_bad_policy.returncode == 11,
+      f"exit={proc_bad_policy.returncode}")
+
+# 13d - policy with invalid JSON should error
+bad_policy_path = policy_dir / "bad_policy.json"
+bad_policy_path.write_text("{invalid json", encoding="utf-8")
+proc_invalid = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "validate",
+     "-m", str(manifest_path), "--policy", str(bad_policy_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("validate with invalid JSON policy exits CONFIG_ERROR (10)",
+      proc_invalid.returncode == 10,
+      f"exit={proc_invalid.returncode}")
+
+# 13e - policy with wrong boolean type should error
+wrong_bool_policy = {
+    "policy_version": "1.0",
+    "default_environment": "production",
+    "env_rules": {
+        "production": {
+            "require_approval": "yes",
+            "allow_version_downgrade": False,
+            "skip_checksum_components": [],
+            "dry_run_failure_blocks_export": True,
+        }
+    }
+}
+wrong_bool_path = policy_dir / "wrong_bool.json"
+wrong_bool_path.write_text(json.dumps(wrong_bool_policy, indent=2), encoding="utf-8")
+proc_wrong_bool = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "validate",
+     "-m", str(manifest_path), "--policy", str(wrong_bool_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("validate with wrong-type boolean policy exits CONFIG_ERROR (10)",
+      proc_wrong_bool.returncode == 10,
+      f"exit={proc_wrong_bool.returncode} stderr={proc_wrong_bool.stderr[:100]}")
+
+
+# ---------------------------------------------------------------------------
+# Section 14: Policy - history snapshot and cross-restart read
+# ---------------------------------------------------------------------------
+print()
+print("Section 14: Policy - history snapshot and cross-restart read")
+print("-" * 60)
+
+# Run a validate with explicit policy so we have a history entry with policy
+proc_val_policy = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "validate",
+     "-m", str(manifest_path), "--policy", str(custom_policy_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("validate with custom policy exits 0 for history test",
+      proc_val_policy.returncode == 0,
+      f"exit={proc_val_policy.returncode}")
+
+# Find a validate history entry that has policy snapshot
+all_runs = list_history()
+check("at least one history entry for policy testing",
+      len(all_runs) > 0,
+      f"runs={len(all_runs)}")
+
+validate_runs_with_policy = [
+    r for r in all_runs
+    if r.get("command") == "validate"
+]
+check("at least one validate history entry",
+      len(validate_runs_with_policy) > 0,
+      f"validate_runs={len(validate_runs_with_policy)}")
+
+if validate_runs_with_policy:
+    # Find the first validate run that actually has a policy_snapshot
+    snap = None
+    latest_run_id = None
+    for r in validate_runs_with_policy:
+        candidate = get_snapshot(r["run_id"])
+        if candidate and candidate.policy_snapshot is not None:
+            snap = candidate
+            latest_run_id = r["run_id"]
+            break
+    check("get_snapshot loads run with policy_snapshot",
+          snap is not None and snap.policy_snapshot is not None,
+          f"has_policy={snap is not None and snap.policy_snapshot is not None}")
+
+    if snap and snap.policy_snapshot:
+        check("policy_snapshot has expected version",
+              snap.policy_snapshot.get("policy_version") == "1.0",
+              f"version={snap.policy_snapshot.get('policy_version')}")
+        check("policy_snapshot has env_rules",
+              "env_rules" in snap.policy_snapshot,
+              f"keys={list(snap.policy_snapshot.keys())}")
+
+    # Cross-restart: reload the same snapshot again
+    snap_reload = get_snapshot(latest_run_id)
+    check("cross-restart snapshot reload yields same policy_snapshot",
+          snap_reload is not None and
+          (snap.policy_snapshot == snap_reload.policy_snapshot
+           if snap and snap_reload else False),
+          f"same={snap.policy_snapshot == snap_reload.policy_snapshot if snap and snap_reload else False}")
+
+    # Test history show command includes policy info
+    proc_show = subprocess.run(
+        [sys.executable, "-m", "release_orchestrator",
+         "history", "--show", latest_run_id],
+        cwd=str(ROOT), capture_output=True, text=True,
+    )
+    check("history --show mentions policy snapshot",
+          "Policy snapshot" in proc_show.stdout or "policy" in proc_show.stdout.lower(),
+          f"stdout_preview={proc_show.stdout[:300]!r}")
+
+
+# ---------------------------------------------------------------------------
+# Section 15: Policy - export bundle includes policy.json and summary
+# ---------------------------------------------------------------------------
+print()
+print("Section 15: Policy - export bundle contains policy.json and summary")
+print("-" * 60)
+
+export_policy_out = ROOT / "archives" / "regression_policy_export"
+if export_policy_out.with_suffix(".zip").exists():
+    export_policy_out.with_suffix(".zip").unlink()
+
+proc_policy_export = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "export",
+     "-m", str(manifest_path),
+     "--policy", str(custom_policy_path),
+     "-o", str(export_policy_out),
+     "--format", "zip"],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("export with custom policy exits 0",
+      proc_policy_export.returncode == 0,
+      f"exit={proc_policy_export.returncode} stderr={proc_policy_export.stderr[:100]}")
+
+policy_zip_path = export_policy_out.with_suffix(".zip")
+check("policy export zip exists", policy_zip_path.exists(), f"exists={policy_zip_path.exists()}")
+
+if policy_zip_path.exists():
+    with zipfile.ZipFile(policy_zip_path) as zf:
+        zip_names = set(zf.namelist())
+        check("export zip contains policy.json",
+              "policy.json" in zip_names,
+              f"names={sorted(zip_names)}")
+        check("export zip contains policy_summary.json",
+              "policy_summary.json" in zip_names,
+              f"names={sorted(zip_names)}")
+
+        if "policy.json" in zip_names:
+            with zf.open("policy.json") as f:
+                policy_data = json.load(f)
+            check("exported policy.json has policy_version 1.0",
+                  policy_data.get("policy_version") == "1.0",
+                  f"version={policy_data.get('policy_version')}")
+            check("exported policy.json has env_rules",
+                  "env_rules" in policy_data,
+                  f"keys={list(policy_data.keys())}")
+
+        if "policy_summary.json" in zip_names:
+            with zf.open("policy_summary.json") as f:
+                summary_data = json.load(f)
+            check("policy_summary has target_environment",
+                  "target_environment" in summary_data,
+                  f"keys={list(summary_data.keys())}")
+            check("policy_summary has rules_applied",
+                  "rules_applied" in summary_data,
+                  f"keys={list(summary_data.keys())}")
+
+# Also verify history entry for this export has policy_snapshot
+export_runs = [h for h in list_history() if h.get("command") == "export"]
+check("at least one export history entry", len(export_runs) > 0, f"count={len(export_runs)}")
+
+if export_runs:
+    latest_export_id = export_runs[0]["run_id"]
+    export_snap = get_snapshot(latest_export_id)
+    check("export run snapshot has policy_snapshot",
+          export_snap is not None and export_snap.policy_snapshot is not None,
+          f"has_policy={export_snap is not None and export_snap.policy_snapshot is not None}")
+    check("export run snapshot has policy_summary",
+          export_snap is not None and export_snap.policy_summary is not None,
+          f"has_summary={export_snap is not None and export_snap.policy_summary is not None}")
+
+
+# ---------------------------------------------------------------------------
+# Section 16: Policy - workspace default policy (from working directory)
+# ---------------------------------------------------------------------------
+print()
+print("Section 16: Policy - workspace default policy detection")
+print("-" * 60)
+
+# Create a temp work dir with a default policy
+import tempfile
+with tempfile.TemporaryDirectory() as tmpdir:
+    tmp_path = Path(tmpdir)
+    work_policy = tmp_path / "release_policy.json"
+    work_policy_content = {
+        "policy_version": "1.0",
+        "default_environment": "production",
+        "env_rules": {
+            "production": {
+                "require_approval": False,
+                "allow_version_downgrade": True,
+                "skip_checksum_components": [],
+                "dry_run_failure_blocks_export": False,
+            }
+        }
+    }
+    work_policy.write_text(json.dumps(work_policy_content, indent=2), encoding="utf-8")
+
+    # Run validate without --policy but with work_dir pointing to tmpdir
+    # The policy loader should find the workspace default policy
+    proc_work = subprocess.run(
+        [sys.executable, "-m", "release_orchestrator",
+         "--work-dir", str(tmp_path),
+         "validate", "-m", str(manifest_path)],
+        cwd=str(ROOT), capture_output=True, text=True,
+    )
+    check("validate with workspace default policy exits 0",
+          proc_work.returncode == 0,
+          f"exit={proc_work.returncode} stderr={proc_work.stderr[:100]}")
+
+
+# ---------------------------------------------------------------------------
+# Section 17: Policy - plan and dry-run also consume policy
+# ---------------------------------------------------------------------------
+print()
+print("Section 17: Policy - plan and dry-run commands also use policy")
+print("-" * 60)
+
+# plan command with policy
+proc_plan_policy = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "plan",
+     "-m", str(manifest_path), "--policy", str(custom_policy_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("plan with --policy exits 0",
+      proc_plan_policy.returncode == 0,
+      f"exit={proc_plan_policy.returncode}")
+
+# dry-run command with policy
+proc_dry_policy = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "dry-run",
+     "-m", str(manifest_path), "--policy", str(custom_policy_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("dry-run with --policy exits 0",
+      proc_dry_policy.returncode == 0,
+      f"exit={proc_dry_policy.returncode}")
+
+# Verify dry-run history has policy snapshot
+dryrun_runs = [h for h in list_history() if h.get("command") == "dry-run"]
+check("at least one dry-run history entry", len(dryrun_runs) > 0, f"count={len(dryrun_runs)}")
+
+if dryrun_runs:
+    latest_dryrun_id = dryrun_runs[0]["run_id"]
+    dryrun_snap = get_snapshot(latest_dryrun_id)
+    check("dry-run snapshot has policy_snapshot",
+          dryrun_snap is not None and dryrun_snap.policy_snapshot is not None,
+          f"has_policy={dryrun_snap is not None and dryrun_snap.policy_snapshot is not None}")
+
+
+# ---------------------------------------------------------------------------
 # Final summary + exit code
 # ---------------------------------------------------------------------------
 print()

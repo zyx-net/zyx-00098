@@ -9,6 +9,7 @@ from ..core.models import Severity
 from ..core.validator import ValidationEngine
 from ..utils.exit_codes import EXIT_CONFIG_ERROR, EXIT_FILE_NOT_FOUND
 from ..utils.logger import get_logger
+from ..utils.policy_loader import PolicyValidationError, load_policy
 from ..utils.storage import load_manifest
 
 LOG = get_logger()
@@ -19,6 +20,8 @@ def add_parser(subparsers: "argparse._SubParsersAction") -> None:
     p = subparsers.add_parser("validate", help="Validate a release manifest")
     p.add_argument("-m", "--manifest", default="examples/sample_manifest.json",
                    help="Path to manifest JSON")
+    p.add_argument("--policy", default=None,
+                   help="Path to release policy JSON file (default: workspace release_policy.json or built-in)")
     p.add_argument("--no-checksum", action="store_true",
                    help="Skip file checksum verification")
     p.add_argument("--strict", action="store_true",
@@ -38,7 +41,22 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
         print(f"ERROR: Invalid manifest: {exc}")
         return CommandResult(exit_code=EXIT_CONFIG_ERROR.code, run_id="")
 
-    engine = ValidationEngine(manifest)
+    try:
+        policy = load_policy(args.policy, work_dir=getattr(args, "work_dir", None))
+    except FileNotFoundError as exc:
+        LOG.error(MODULE, str(exc))
+        print(f"ERROR: {exc}")
+        return CommandResult(exit_code=EXIT_FILE_NOT_FOUND.code, run_id="")
+    except PolicyValidationError as exc:
+        LOG.error(MODULE, f"Invalid policy: {exc}")
+        print(f"ERROR: Invalid policy: {exc}")
+        for err in exc.errors:
+            print(f"  - {err}")
+        return CommandResult(exit_code=EXIT_CONFIG_ERROR.code, run_id="")
+
+    policy_dict = policy.to_dict()
+
+    engine = ValidationEngine(manifest, policy=policy)
     result = engine.validate(verify_checksums=not args.no_checksum)
     vr_dict = result.to_dict()
     summary = vr_dict["summary"]
@@ -46,6 +64,8 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
     print(f"\n=== Validation Report ===")
     print(f"Release ID : {manifest.release_id}")
     print(f"Components : {len(manifest.components)}")
+    print(f"Target Env : {manifest.target_environment.value}")
+    print(f"Policy     : {policy.policy_version} (env rules: {', '.join(policy.list_known_environments())})")
     print(f"Timestamp  : {result.timestamp}")
     print(f"Total      : {summary['total']} issues")
     print(f"  Errors   : {summary['errors']}")
@@ -76,4 +96,5 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
         run_id="",
         manifest_snapshot=manifest.to_dict(),
         validation_result=vr_dict,
+        extra_artifacts={"policy_snapshot": policy_dict},
     )

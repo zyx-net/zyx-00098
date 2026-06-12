@@ -1,0 +1,17 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "examples/sample_manifest.json",
+    "policy": "test_policies/dev_policy.json",
+    "output": "archives/review_policy_export",
+    "format": "zip",
+    "no_dryrun": true,
+    "seed": null,
+    "compare_with": null,
+    "func": "<function _run at 0x000001987F628720>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612060346-0f159529"
+}

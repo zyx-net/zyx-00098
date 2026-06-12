@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-06-12T05:25:02Z",
+  "passed": true,
+  "issues": [
+    {
+      "component": "common-utils",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for common-utils",
+      "details": null
+    },
+    {
+      "component": "auth-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for auth-service",
+      "details": null
+    },
+    {
+      "component": "order-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for order-service",
+      "details": null
+    },
+    {
+      "component": "payment-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for payment-service",
+      "details": null
+    },
+    {
+      "component": "common-utils",
+      "severity": "info",
+      "issue_code": "APPROVAL_OPTIONAL",
+      "message": "Component common-utils has 1 approval(s) (approval not required by policy)",
+      "details": {
+        "approvers": [
+          "alice@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "auth-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OPTIONAL",
+      "message": "Component auth-service has 1 approval(s) (approval not required by policy)",
+      "details": {
+        "approvers": [
+          "bob@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "order-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OPTIONAL",
+      "message": "Component order-service has 1 approval(s) (approval not required by policy)",
+      "details": {
+        "approvers": [
+          "carol@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "payment-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OPTIONAL",
+      "message": "Component payment-service has 1 approval(s) (approval not required by policy)",
+      "details": {
+        "approvers": [
+          "dave@corp.com"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 8
+  }
+}

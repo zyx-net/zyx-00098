@@ -1,0 +1,66 @@
+{
+  "run_id": "RUN-20260612060346-2507275a",
+  "command": "validate",
+  "started_at": "2026-06-12T06:03:46Z",
+  "finished_at": "2026-06-12T06:03:46Z",
+  "exit_code": 11,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "validate",
+      "manifest": "examples/sample_manifest.json",
+      "policy": "nonexistent_policy.json",
+      "no_checksum": false,
+      "strict": false,
+      "func": "<function _run at 0x000002ADDD6A5380>"
+    },
+    "command": "validate",
+    "run_id": "RUN-20260612060346-2507275a"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T06:03:46Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[validate] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612060346-2507275a"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:46Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from examples/sample_manifest.json",
+      "extra": {
+        "components": 5
+      }
+    },
+    {
+      "timestamp": "2026-06-12T06:03:46Z",
+      "level": "ERROR",
+      "module": "cmd.validate",
+      "message": "Policy file not found: nonexistent_policy.json",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T06:03:46Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[validate] Finished",
+      "extra": {
+        "run_id": "RUN-20260612060346-2507275a",
+        "exit_code": 11
+      }
+    }
+  ],
+  "archive_path": null
+}

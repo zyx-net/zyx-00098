@@ -1,0 +1,107 @@
+{
+  "summary": {
+    "dry_run_id": "DRY-PLAN-20260612060607-06604d62",
+    "started_at": "2026-06-12T06:06:07Z",
+    "finished_at": "2026-06-12T06:06:07Z",
+    "total_steps": 4,
+    "successful": 4,
+    "failed": 0,
+    "blocked": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "deployed": {
+      "common-utils": "2.3.1",
+      "auth-service": "1.5.0",
+      "order-service": "3.1.0",
+      "payment-service": "2.0.2"
+    },
+    "notes": "This is a simulated execution - no real systems were contacted."
+  },
+  "steps": [
+    {
+      "step_index": 0,
+      "component_name": "common-utils",
+      "component_version": "2.3.1",
+      "action": "deploy",
+      "status": "success",
+      "started_at": "2026-06-12T06:06:07Z",
+      "finished_at": "2026-06-12T06:06:07Z",
+      "rollback_target": "2.2.0",
+      "approver": "alice@corp.com",
+      "prerequisites": [],
+      "blockers": [],
+      "logs": [
+        "Applying: common-utils@2.3.1",
+        "Stored rollback target: 2.2.0",
+        "Release approved by: alice@corp.com",
+        "SUCCESS: common-utils deployed in simulated environment"
+      ]
+    },
+    {
+      "step_index": 1,
+      "component_name": "auth-service",
+      "component_version": "1.5.0",
+      "action": "deploy",
+      "status": "success",
+      "started_at": "2026-06-12T06:06:07Z",
+      "finished_at": "2026-06-12T06:06:07Z",
+      "rollback_target": "1.4.2",
+      "approver": "bob@corp.com",
+      "prerequisites": [
+        "common-utils"
+      ],
+      "blockers": [],
+      "logs": [
+        "Applying: auth-service@1.5.0",
+        "Stored rollback target: 1.4.2",
+        "Release approved by: bob@corp.com",
+        "SUCCESS: auth-service deployed in simulated environment"
+      ]
+    },
+    {
+      "step_index": 2,
+      "component_name": "order-service",
+      "component_version": "3.1.0",
+      "action": "deploy",
+      "status": "success",
+      "started_at": "2026-06-12T06:06:07Z",
+      "finished_at": "2026-06-12T06:06:07Z",
+      "rollback_target": "3.0.4",
+      "approver": "carol@corp.com",
+      "prerequisites": [
+        "common-utils",
+        "auth-service"
+      ],
+      "blockers": [],
+      "logs": [
+        "Applying: order-service@3.1.0",
+        "Stored rollback target: 3.0.4",
+        "Release approved by: carol@corp.com",
+        "SUCCESS: order-service deployed in simulated environment"
+      ]
+    },
+    {
+      "step_index": 3,
+      "component_name": "payment-service",
+      "component_version": "2.0.2",
+      "action": "deploy",
+      "status": "success",
+      "started_at": "2026-06-12T06:06:07Z",
+      "finished_at": "2026-06-12T06:06:07Z",
+      "rollback_target": "2.0.1",
+      "approver": "dave@corp.com",
+      "prerequisites": [
+        "common-utils",
+        "order-service"
+      ],
+      "blockers": [],
+      "logs": [
+        "Applying: payment-service@2.0.2",
+        "Stored rollback target: 2.0.1",
+        "Release approved by: dave@corp.com",
+        "SUCCESS: payment-service deployed in simulated environment"
+      ]
+    }
+  ],
+  "logs": []
+}

@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-06-12T06:05:27Z",
+  "passed": false,
+  "issues": [
+    {
+      "component": "legacy-reporting",
+      "severity": "info",
+      "issue_code": "VERSION_DOWNGRADE_ALLOWED",
+      "message": "Version downgrade for legacy-reporting: 1.1.0 -> 1.0.3 (allowed by policy)",
+      "details": {
+        "from": "1.1.0",
+        "to": "1.0.3",
+        "policy": "allow_version_downgrade"
+      }
+    },
+    {
+      "component": "common-utils",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for common-utils",
+      "details": null
+    },
+    {
+      "component": "auth-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for auth-service",
+      "details": null
+    },
+    {
+      "component": "order-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for order-service",
+      "details": null
+    },
+    {
+      "component": "payment-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for payment-service",
+      "details": null
+    },
+    {
+      "component": "legacy-reporting",
+      "severity": "error",
+      "issue_code": "CHECKSUM_MISMATCH",
+      "message": "Checksum mismatch for legacy-reporting: expected 02b60b3b9ed309b730abc7006e62bf07ad5b911bc8ae57c4cf001bad35819e7a, got 97d66da2e07e58160ed86fdbb35affe30a46053a4e43efcb74c1629cd54b7ab3",
+      "details": {
+        "expected": "02b60b3b9ed309b730abc7006e62bf07ad5b911bc8ae57c4cf001bad35819e7a",
+        "actual": "97d66da2e07e58160ed86fdbb35affe30a46053a4e43efcb74c1629cd54b7ab3",
+        "algorithm": "sha256"
+      }
+    },
+    {
+      "component": "common-utils",
+      "severity": "info",
+      "issue_code": "APPROVAL_OPTIONAL",
+      "message": "Component common-utils has 1 approval(s) (approval not required by policy)",
+      "details": {
+        "approvers": [
+          "alice@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "auth-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OPTIONAL",
+      "message": "Component auth-service has 1 approval(s) (approval not required by policy)",
+      "details": {
+        "approvers": [
+          "bob@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "order-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OPTIONAL",
+      "message": "Component order-service has 1 approval(s) (approval not required by policy)",
+      "details": {
+        "approvers": [
+          "carol@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "payment-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OPTIONAL",
+      "message": "Component payment-service has 1 approval(s) (approval not required by policy)",
+      "details": {
+        "approvers": [
+          "dave@corp.com"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 9
+  }
+}

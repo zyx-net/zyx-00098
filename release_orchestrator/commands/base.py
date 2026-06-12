@@ -63,6 +63,8 @@ def run_with_snapshot(
     logger.info("cli", f"[{command_name}] Finished", run_id=run_id, exit_code=result.exit_code)
 
     extra = result.extra_artifacts or {}
+    policy_snapshot = extra.get("policy_snapshot")
+    policy_summary = extra.get("policy_summary")
     persist_run_artifacts(
         run_id=run_id,
         command=command_name,
@@ -70,6 +72,8 @@ def run_with_snapshot(
         exit_code=result.exit_code,
         config_snapshot=result.config_snapshot,
         manifest_snapshot=result.manifest_snapshot,
+        policy_snapshot=policy_snapshot,
+        policy_summary=policy_summary,
         validation_result=result.validation_result,
         release_plan=result.release_plan,
         rollback_plan=result.rollback_plan,

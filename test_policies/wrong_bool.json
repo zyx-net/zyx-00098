@@ -1,0 +1,12 @@
+{
+  "policy_version": "1.0",
+  "default_environment": "production",
+  "env_rules": {
+    "production": {
+      "require_approval": "yes",
+      "allow_version_downgrade": false,
+      "skip_checksum_components": [],
+      "dry_run_failure_blocks_export": true
+    }
+  }
+}
