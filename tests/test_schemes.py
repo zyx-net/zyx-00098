@@ -170,6 +170,62 @@ class TestReleaseSchemeModel(unittest.TestCase):
         self.assertIsNone(restored.manifest)
         self.assertEqual(len(restored.waves), 0)
 
+    def test_release_window_from_dict_missing_fields(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            ReleaseWindow.from_dict({"window_id": "WIN-1"})
+        self.assertIn("missing required field(s)", str(ctx.exception))
+        self.assertIn("name", str(ctx.exception))
+        self.assertIn("start_time", str(ctx.exception))
+        self.assertIn("end_time", str(ctx.exception))
+
+    def test_release_window_from_dict_partial_missing(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            ReleaseWindow.from_dict({
+                "window_id": "WIN-1",
+                "name": "Partial",
+                "start_time": "2026-06-15T09:00:00Z",
+            })
+        self.assertIn("missing required field(s)", str(ctx.exception))
+        self.assertIn("end_time", str(ctx.exception))
+        self.assertNotIn("name", str(ctx.exception))
+
+    def test_wave_from_dict_missing_fields(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            Wave.from_dict({"wave_id": "WAVE-1"})
+        self.assertIn("missing required field(s)", str(ctx.exception))
+        self.assertIn("name", str(ctx.exception))
+
+    def test_load_windows_from_json_missing_fields(self) -> None:
+        from release_orchestrator.core.scheduler import load_windows_from_json
+
+        with tempfile.TemporaryDirectory() as tmp:
+            bad_path = os.path.join(tmp, "bad_windows.json")
+            with open(bad_path, "w", encoding="utf-8") as f:
+                json.dump({"windows": [
+                    {"window_id": "WIN-1", "name": "Only Name"},
+                    {"window_id": "WIN-2"},
+                ]}, f)
+            with self.assertRaises(ValueError) as ctx:
+                load_windows_from_json(bad_path)
+            self.assertIn("Invalid window", str(ctx.exception))
+            self.assertIn("index 0", str(ctx.exception))
+            self.assertIn("missing required field(s)", str(ctx.exception))
+
+    def test_load_waves_from_json_missing_fields(self) -> None:
+        from release_orchestrator.core.scheduler import load_waves_from_json
+
+        with tempfile.TemporaryDirectory() as tmp:
+            bad_path = os.path.join(tmp, "bad_waves.json")
+            with open(bad_path, "w", encoding="utf-8") as f:
+                json.dump({"waves": [
+                    {"wave_id": "WAVE-1"},
+                ]}, f)
+            with self.assertRaises(ValueError) as ctx:
+                load_waves_from_json(bad_path)
+            self.assertIn("Invalid wave", str(ctx.exception))
+            self.assertIn("index 0", str(ctx.exception))
+            self.assertIn("missing required field(s)", str(ctx.exception))
+
 
 class TestSchemeValidator(unittest.TestCase):
     """Tests for scheme validation logic."""

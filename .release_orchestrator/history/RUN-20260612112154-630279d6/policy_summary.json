@@ -1,0 +1,35 @@
+{
+  "target_environment": "staging",
+  "policy_version": "1.0",
+  "default_environment": "production",
+  "rules_applied": [
+    "require_approval",
+    "block_version_downgrade",
+    "dry_run_failure_blocks_export"
+  ],
+  "component_impact": {
+    "common-utils": [
+      "approval_required",
+      "version_downgrade_blocked"
+    ],
+    "auth-service": [
+      "approval_required",
+      "version_downgrade_blocked"
+    ],
+    "order-service": [
+      "approval_required",
+      "version_downgrade_blocked"
+    ],
+    "payment-service": [
+      "approval_required",
+      "version_downgrade_blocked"
+    ]
+  },
+  "warnings": [],
+  "env_rules": {
+    "require_approval": true,
+    "allow_version_downgrade": false,
+    "skip_checksum_components": [],
+    "dry_run_failure_blocks_export": true
+  }
+}

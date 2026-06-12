@@ -219,7 +219,7 @@ def _handle_save(args: argparse.Namespace, base: Optional[str]) -> CommandResult
         LOG.error(MODULE, f"Failed to build scheme: {exc}")
         if isinstance(exc, FileNotFoundError):
             return CommandResult(exit_code=EXIT_FILE_NOT_FOUND.code, run_id="")
-        return CommandResult(exit_code=EXIT_CONFIG_ERROR.code, run_id="")
+        return CommandResult(exit_code=EXIT_SCHEME_VALIDATION_FAILED.code, run_id="")
 
     if not args.skip_validation:
         existing_locks = _load_existing_locks(args, base)

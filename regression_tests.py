@@ -1736,6 +1736,56 @@ try:
           proc_bad_save.returncode != 0,
           f"exit_code={proc_bad_save.returncode}")
 
+    # 25.16a: scheme save -w with windows JSON missing fields -> exit 23, no traceback
+    bad_missing_fields_windows = os.path.join(scheme_test_dir, "bad_missing_fields.json")
+    with open(bad_missing_fields_windows, "w") as f:
+        json.dump({"windows": [{"window_id": "WIN-BAD", "name": "NoTimes"}]}, f)
+    proc_bad_missing = _run_scheme_cli([
+        "scheme", "save", "bad-missing-fields", "-w", bad_missing_fields_windows,
+    ], cwd=scheme_test_dir)
+    check("scheme save - windows missing fields exits 23",
+          proc_bad_missing.returncode == 23,
+          f"exit_code={proc_bad_missing.returncode}")
+    check("scheme save - windows missing fields mentions missing field names",
+          "missing required field(s)" in (proc_bad_missing.stdout + proc_bad_missing.stderr) or
+          "Invalid window" in (proc_bad_missing.stdout + proc_bad_missing.stderr),
+          f"mentions_fields={('missing required field' in (proc_bad_missing.stdout+proc_bad_missing.stderr))}")
+    check("scheme save - windows missing fields NO traceback",
+          "Traceback" not in proc_bad_missing.stderr and "KeyError" not in proc_bad_missing.stderr,
+          f"no_traceback={'Traceback' not in proc_bad_missing.stderr}")
+
+    # 25.16b: scheme save with windows JSON missing multiple fields -> mentions each
+    bad_multi_missing = os.path.join(scheme_test_dir, "bad_multi_missing.json")
+    with open(bad_multi_missing, "w") as f:
+        json.dump({"windows": [{"window_id": "WIN-X"}]}, f)
+    proc_multi = _run_scheme_cli([
+        "scheme", "save", "bad-multi", "-w", bad_multi_missing,
+    ], cwd=scheme_test_dir)
+    check("scheme save - multi-missing fields exits 23",
+          proc_multi.returncode == 23,
+          f"exit_code={proc_multi.returncode}")
+    combined = proc_multi.stdout + proc_multi.stderr
+    check("scheme save - mentions name",
+          "name" in combined, f"has_name={'name' in combined}")
+    check("scheme save - mentions start_time",
+          "start_time" in combined, f"has_start={'start_time' in combined}")
+    check("scheme save - mentions end_time",
+          "end_time" in combined, f"has_end={'end_time' in combined}")
+
+    # 25.16c: scheme save with bad JSON windows file -> exit 23
+    bad_nonjson = os.path.join(scheme_test_dir, "not_json.txt")
+    with open(bad_nonjson, "w") as f:
+        f.write("this is not json at all")
+    proc_badjson = _run_scheme_cli([
+        "scheme", "save", "bad-json-file", "-w", bad_nonjson,
+    ], cwd=scheme_test_dir)
+    check("scheme save - bad JSON windows file exits 23",
+          proc_badjson.returncode == 23,
+          f"exit_code={proc_badjson.returncode}")
+    check("scheme save - bad JSON windows no traceback",
+          "Traceback" not in proc_badjson.stderr,
+          f"no_traceback={'Traceback' not in proc_badjson.stderr}")
+
     # 25.17: scheme operations log exists and has entries
     log_path = Path(scheme_test_dir) / ".release_orchestrator" / "scheme_operations.log"
     check("scheme operations log exists",

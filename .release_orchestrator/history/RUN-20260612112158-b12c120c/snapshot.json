@@ -1,0 +1,76 @@
+{
+  "run_id": "RUN-20260612112158-b12c120c",
+  "command": "validate",
+  "started_at": "2026-06-12T11:21:58Z",
+  "finished_at": "2026-06-12T11:21:58Z",
+  "exit_code": 10,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "validate",
+      "manifest": "D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+      "policy": "D:\\workSpace\\AI__SPACE\\zyx-00098\\test_policies\\bad_policy.json",
+      "no_checksum": false,
+      "strict": false,
+      "func": "<function _run at 0x0000020E0D9A5F30>"
+    },
+    "command": "validate",
+    "run_id": "RUN-20260612112158-b12c120c"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T11:21:58Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[validate] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612112158-b12c120c"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T11:21:58Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+      "extra": {
+        "components": 4
+      }
+    },
+    {
+      "timestamp": "2026-06-12T11:21:58Z",
+      "level": "INFO",
+      "module": "policy_loader",
+      "message": "Loading policy from explicit path",
+      "extra": {
+        "path": "D:\\workSpace\\AI__SPACE\\zyx-00098\\test_policies\\bad_policy.json"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T11:21:58Z",
+      "level": "ERROR",
+      "module": "cmd.validate",
+      "message": "Invalid policy: Invalid policy JSON in D:\\workSpace\\AI__SPACE\\zyx-00098\\test_policies\\bad_policy.json: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T11:21:58Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[validate] Finished",
+      "extra": {
+        "run_id": "RUN-20260612112158-b12c120c",
+        "exit_code": 10
+      }
+    }
+  ],
+  "archive_path": null
+}

@@ -554,6 +554,12 @@ class ReleaseWindow:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ReleaseWindow":
+        required = ["window_id", "name", "start_time", "end_time"]
+        missing = [f for f in required if f not in data]
+        if missing:
+            raise ValueError(
+                f"ReleaseWindow missing required field(s): {', '.join(missing)}"
+            )
         freeze_periods = [
             FreezePeriod.from_dict(fp) if isinstance(fp, dict) else fp
             for fp in data.get("freeze_periods", [])
@@ -590,6 +596,12 @@ class Wave:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Wave":
+        required = ["wave_id", "name"]
+        missing = [f for f in required if f not in data]
+        if missing:
+            raise ValueError(
+                f"Wave missing required field(s): {', '.join(missing)}"
+            )
         return cls(
             wave_id=data["wave_id"],
             name=data["name"],

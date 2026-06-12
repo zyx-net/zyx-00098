@@ -500,17 +500,22 @@ def load_windows_from_json(path: str) -> List[ReleaseWindow]:
         with p.open("r", encoding="utf-8") as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid windows JSON: {e}")
+        raise ValueError(f"Invalid windows JSON in '{p}': {e}")
 
     if isinstance(data, list):
         windows_data = data
     else:
         windows_data = data.get("windows", [])
     windows = []
-    for w in windows_data:
+    for idx, w in enumerate(windows_data):
         if "window_id" not in w:
             w["window_id"] = generate_id("WIN")
-        windows.append(ReleaseWindow.from_dict(w))
+        try:
+            windows.append(ReleaseWindow.from_dict(w))
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid window at index {idx} in '{p}': {exc}"
+            ) from exc
 
     LOG.info(
         MODULE,
@@ -596,14 +601,19 @@ def load_waves_from_json(path: str) -> List[Wave]:
         with p.open("r", encoding="utf-8") as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid waves JSON: {e}")
+        raise ValueError(f"Invalid waves JSON in '{p}': {e}")
 
     waves_data = data.get("waves", data if isinstance(data, list) else [])
     waves = []
-    for w in waves_data:
+    for idx, w in enumerate(waves_data):
         if "wave_id" not in w:
             w["wave_id"] = generate_id("WAVE")
-        waves.append(Wave.from_dict(w))
+        try:
+            waves.append(Wave.from_dict(w))
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid wave at index {idx} in '{p}': {exc}"
+            ) from exc
 
     LOG.info(
         MODULE,
