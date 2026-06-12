@@ -1,0 +1,13 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "validate",
+    "manifest": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\zyx-00098-review\\checksum_mismatch.json",
+    "no_checksum": false,
+    "strict": false,
+    "func": "<function _run at 0x00000274AE93E770>"
+  },
+  "command": "validate",
+  "run_id": "RUN-20260612015511-1a49bd2d"
+}

@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "rollback-plan",
+    "manifest": "examples/sample_manifest.json",
+    "plan": "examples/generated_plan.json",
+    "output": null,
+    "only_failed": false,
+    "failed": null,
+    "func": "<function _run at 0x000002AFA4168F60>"
+  },
+  "command": "rollback-plan",
+  "run_id": "RUN-20260612012523-18b8a089"
+}

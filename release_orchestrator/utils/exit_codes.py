@@ -1,0 +1,118 @@
+"""Exit code definitions for the release orchestrator.
+
+All exit codes used by the tool are defined here for consistency and
+documentation purposes. Each exit code has a unique number and a
+descriptive meaning.
+"""
+from dataclasses import dataclass
+from typing import Dict
+
+
+@dataclass(frozen=True)
+class ExitCode:
+    code: int
+    name: str
+    description: str
+
+
+EXIT_OK = ExitCode(0, "EXIT_OK", "Command executed successfully without any errors.")
+EXIT_CIRCULAR_DEPENDENCY = ExitCode(
+    2, "EXIT_CIRCULAR_DEPENDENCY",
+    "Circular dependency detected among release components."
+)
+EXIT_VERSION_DOWNGRADE = ExitCode(
+    3, "EXIT_VERSION_DOWNGRADE",
+    "Version downgrade detected - target version is lower than currently deployed."
+)
+EXIT_CHECKSUM_MISMATCH = ExitCode(
+    4, "EXIT_CHECKSUM_MISMATCH",
+    "Package checksum does not match the declared checksum."
+)
+EXIT_APPROVAL_MISSING = ExitCode(
+    5, "EXIT_APPROVAL_MISSING",
+    "Production environment release is missing required approval records."
+)
+EXIT_CONFIG_ERROR = ExitCode(
+    10, "EXIT_CONFIG_ERROR",
+    "Configuration or manifest file is invalid or cannot be parsed."
+)
+EXIT_FILE_NOT_FOUND = ExitCode(
+    11, "EXIT_FILE_NOT_FOUND",
+    "Required file (manifest, config, archive, etc.) not found."
+)
+EXIT_VALIDATION_FAILED = ExitCode(
+    12, "EXIT_VALIDATION_FAILED",
+    "General validation failure that does not fall into more specific categories."
+)
+EXIT_PLAN_ERROR = ExitCode(
+    13, "EXIT_PLAN_ERROR",
+    "Failed to generate a valid release or rollback plan."
+)
+EXIT_EXPORT_ERROR = ExitCode(
+    14, "EXIT_EXPORT_ERROR",
+    "Failed to export or package the release archive."
+)
+EXIT_HISTORY_ERROR = ExitCode(
+    15, "EXIT_HISTORY_ERROR",
+    "Failed to read or query execution history."
+)
+EXIT_DRYRUN_FAILED = ExitCode(
+    16, "EXIT_DRYRUN_FAILED",
+    "Dry-run simulation detected issues during simulated execution."
+)
+EXIT_UNKNOWN_COMMAND = ExitCode(
+    20, "EXIT_UNKNOWN_COMMAND",
+    "Unknown or invalid command specified."
+)
+EXIT_INTERNAL_ERROR = ExitCode(
+    99, "EXIT_INTERNAL_ERROR",
+    "Unexpected internal error occurred during execution."
+)
+
+
+ALL_EXIT_CODES = [
+    EXIT_OK,
+    EXIT_CIRCULAR_DEPENDENCY,
+    EXIT_VERSION_DOWNGRADE,
+    EXIT_CHECKSUM_MISMATCH,
+    EXIT_APPROVAL_MISSING,
+    EXIT_CONFIG_ERROR,
+    EXIT_FILE_NOT_FOUND,
+    EXIT_VALIDATION_FAILED,
+    EXIT_PLAN_ERROR,
+    EXIT_EXPORT_ERROR,
+    EXIT_HISTORY_ERROR,
+    EXIT_DRYRUN_FAILED,
+    EXIT_UNKNOWN_COMMAND,
+    EXIT_INTERNAL_ERROR,
+]
+
+
+def get_exit_code_by_code(code: int) -> ExitCode:
+    """Return the ExitCode object for a given numeric code.
+
+    Args:
+        code: The numeric exit code.
+
+    Returns:
+        The matching ExitCode, or EXIT_INTERNAL_ERROR if not found.
+    """
+    for ec in ALL_EXIT_CODES:
+        if ec.code == code:
+            return ec
+    return EXIT_INTERNAL_ERROR
+
+
+def exit_codes_as_dict() -> Dict[int, Dict[str, str]]:
+    """Return all exit codes as a dictionary suitable for serialization.
+
+    Returns:
+        Dict mapping numeric code -> {name, description}.
+    """
+    return {
+        ec.code: {
+            "name": ec.name,
+            "description": ec.description,
+        }
+        for ec in ALL_EXIT_CODES
+    }

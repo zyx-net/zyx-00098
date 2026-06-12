@@ -1,0 +1,27 @@
+{
+  "run_id": "RUN-20260612013023-ab616ef4",
+  "command": "history",
+  "started_at": "2026-06-12T01:30:23Z",
+  "finished_at": "2026-06-12T01:30:23Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": null,
+      "limit": 10,
+      "show": null,
+      "show_logs": false,
+      "func": "<function _run at 0x000002253D0694E0>"
+    },
+    "command": "history",
+    "run_id": "RUN-20260612013023-ab616ef4"
+  },
+  "manifest_snapshot": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "logs": [],
+  "archive_path": null
+}

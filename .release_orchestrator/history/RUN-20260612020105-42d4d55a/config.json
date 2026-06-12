@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "rollback-plan",
+    "manifest": "examples/clean_manifest.json",
+    "plan": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\zyx-00098-review\\plan.json",
+    "output": null,
+    "only_failed": false,
+    "failed": null,
+    "func": "<function _run at 0x000001D06C0CCEB0>"
+  },
+  "command": "rollback-plan",
+  "run_id": "RUN-20260612020105-42d4d55a"
+}

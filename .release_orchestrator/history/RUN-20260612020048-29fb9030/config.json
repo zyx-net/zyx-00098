@@ -1,0 +1,13 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "plan",
+    "manifest": "examples/clean_manifest.json",
+    "output": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\zyx-00098-review\\plan.json",
+    "skip_validate": false,
+    "func": "<function _run at 0x0000024E8F147D70>"
+  },
+  "command": "plan",
+  "run_id": "RUN-20260612020048-29fb9030"
+}

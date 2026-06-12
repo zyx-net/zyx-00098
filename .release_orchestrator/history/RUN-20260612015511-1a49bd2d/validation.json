@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-06-12T01:55:11Z",
+  "passed": false,
+  "issues": [
+    {
+      "component": "common-utils",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for common-utils",
+      "details": null
+    },
+    {
+      "component": "auth-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for auth-service",
+      "details": null
+    },
+    {
+      "component": "order-service",
+      "severity": "error",
+      "issue_code": "CHECKSUM_MISMATCH",
+      "message": "Checksum mismatch for order-service: expected deadbeef, got 345471e034b3650a46a17765d762a5c8eb6f26a6fb5c051f67dac29a4f97129a",
+      "details": {
+        "expected": "deadbeef",
+        "actual": "345471e034b3650a46a17765d762a5c8eb6f26a6fb5c051f67dac29a4f97129a",
+        "algorithm": "sha256"
+      }
+    },
+    {
+      "component": "payment-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for payment-service",
+      "details": null
+    },
+    {
+      "component": "common-utils",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component common-utils approved by: alice@corp.com",
+      "details": {
+        "approvers": [
+          "alice@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "auth-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component auth-service approved by: bob@corp.com",
+      "details": {
+        "approvers": [
+          "bob@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "order-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component order-service approved by: carol@corp.com",
+      "details": {
+        "approvers": [
+          "carol@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "payment-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component payment-service approved by: dave@corp.com",
+      "details": {
+        "approvers": [
+          "dave@corp.com"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 7
+  }
+}

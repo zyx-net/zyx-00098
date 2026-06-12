@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": ".\\examples\\clean_manifest.json",
+    "output": ".\\archives\\review_bundle",
+    "format": "zip",
+    "no_dryrun": false,
+    "seed": 7,
+    "func": "<function _run at 0x000001D45F450720>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612015417-4611c85b"
+}

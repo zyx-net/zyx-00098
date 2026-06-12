@@ -1,0 +1,58 @@
+{
+  "0": {
+    "name": "EXIT_OK",
+    "description": "Command executed successfully without any errors."
+  },
+  "2": {
+    "name": "EXIT_CIRCULAR_DEPENDENCY",
+    "description": "Circular dependency detected among release components."
+  },
+  "3": {
+    "name": "EXIT_VERSION_DOWNGRADE",
+    "description": "Version downgrade detected - target version is lower than currently deployed."
+  },
+  "4": {
+    "name": "EXIT_CHECKSUM_MISMATCH",
+    "description": "Package checksum does not match the declared checksum."
+  },
+  "5": {
+    "name": "EXIT_APPROVAL_MISSING",
+    "description": "Production environment release is missing required approval records."
+  },
+  "10": {
+    "name": "EXIT_CONFIG_ERROR",
+    "description": "Configuration or manifest file is invalid or cannot be parsed."
+  },
+  "11": {
+    "name": "EXIT_FILE_NOT_FOUND",
+    "description": "Required file (manifest, config, archive, etc.) not found."
+  },
+  "12": {
+    "name": "EXIT_VALIDATION_FAILED",
+    "description": "General validation failure that does not fall into more specific categories."
+  },
+  "13": {
+    "name": "EXIT_PLAN_ERROR",
+    "description": "Failed to generate a valid release or rollback plan."
+  },
+  "14": {
+    "name": "EXIT_EXPORT_ERROR",
+    "description": "Failed to export or package the release archive."
+  },
+  "15": {
+    "name": "EXIT_HISTORY_ERROR",
+    "description": "Failed to read or query execution history."
+  },
+  "16": {
+    "name": "EXIT_DRYRUN_FAILED",
+    "description": "Dry-run simulation detected issues during simulated execution."
+  },
+  "20": {
+    "name": "EXIT_UNKNOWN_COMMAND",
+    "description": "Unknown or invalid command specified."
+  },
+  "99": {
+    "name": "EXIT_INTERNAL_ERROR",
+    "description": "Unexpected internal error occurred during execution."
+  }
+}

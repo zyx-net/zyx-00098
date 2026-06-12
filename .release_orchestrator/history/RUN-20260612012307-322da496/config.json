@@ -1,0 +1,13 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "validate",
+    "manifest": "examples/sample_manifest.json",
+    "no_checksum": false,
+    "strict": false,
+    "func": "<function _run at 0x0000022C61FD7270>"
+  },
+  "command": "validate",
+  "run_id": "RUN-20260612012307-322da496"
+}
