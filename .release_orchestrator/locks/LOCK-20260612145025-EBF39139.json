@@ -1,0 +1,14 @@
+{
+  "lock_id": "LOCK-20260612145025-EBF39139",
+  "scope": "window",
+  "environment": null,
+  "service_name": null,
+  "window_id": null,
+  "window_start": "2026-06-15T08:00:00Z",
+  "window_end": "2026-06-15T10:00:00Z",
+  "reason": "Reviewer June overlap freeze",
+  "created_by": "reviewer@test.com",
+  "created_at": "2026-06-12T14:50:25Z",
+  "expires_at": null,
+  "metadata": {}
+}

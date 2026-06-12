@@ -1,0 +1,23 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "add",
+    "func": "<function _run at 0x0000026F4933B740>",
+    "scope": "environment",
+    "environment": "production",
+    "service": null,
+    "window_start": null,
+    "window_end": null,
+    "window_id": null,
+    "reason": "Duplicate test",
+    "by": "reviewer@test.com",
+    "expires": null,
+    "overwrite": false,
+    "as_role": "SRE_ADMIN",
+    "lock_id": null
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612144331-3b4d08dc"
+}

@@ -791,3 +791,214 @@ class ReleaseScheme:
     @classmethod
     def from_json(cls, content: str) -> "ReleaseScheme":
         return cls.from_dict(json.loads(content))
+
+
+class LockScope(str, Enum):
+    ENVIRONMENT = "environment"
+    SERVICE = "service"
+    WINDOW = "window"
+    GLOBAL = "global"
+
+
+@dataclass
+class ReleaseLock:
+    """A deployment freeze / release lock.
+
+    Covers one of four scopes:
+      - GLOBAL:       blocks all operations (no env/service/window needed)
+      - ENVIRONMENT:  blocks a whole environment (environment required)
+      - SERVICE:      blocks a specific service/component (service_name required, env optional)
+      - WINDOW:       blocks operations during a time window (window_start/window_end required)
+
+    Attributes:
+        lock_id:     Unique id of the lock (auto-generated if not provided)
+        scope:       LockScope enum
+        environment: Target environment (required for ENVIRONMENT, optional for SERVICE)
+        service_name: Target service name (required for SERVICE scope)
+        window_id:   Reference window id (required for WINDOW scope, for reference)
+        window_start: ISO datetime string for window start (WINDOW scope)
+        window_end:  ISO datetime string for window end (WINDOW scope)
+        reason:      Human-readable reason for the lock
+        created_by:  User who created the lock
+        created_at:  ISO timestamp of creation
+        expires_at:  Optional ISO timestamp when the lock expires (None = never expires)
+        metadata:    Arbitrary extra metadata
+    """
+    lock_id: str
+    scope: LockScope
+    environment: Optional[str] = None
+    service_name: Optional[str] = None
+    window_id: Optional[str] = None
+    window_start: Optional[str] = None
+    window_end: Optional[str] = None
+    reason: str = ""
+    created_by: str = "unknown"
+    created_at: str = field(default_factory=now_iso)
+    expires_at: Optional[str] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["scope"] = self.scope.value if isinstance(self.scope, LockScope) else str(self.scope)
+        return d
+
+    def to_json(self, indent: int = 2) -> str:
+        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False, default=str)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ReleaseLock":
+        scope_val = data.get("scope", LockScope.GLOBAL.value)
+        if isinstance(scope_val, LockScope):
+            scope = scope_val
+        else:
+            try:
+                scope = LockScope(scope_val)
+            except ValueError:
+                scope = LockScope.GLOBAL
+
+        return cls(
+            lock_id=data["lock_id"],
+            scope=scope,
+            environment=data.get("environment"),
+            service_name=data.get("service_name"),
+            window_id=data.get("window_id"),
+            window_start=data.get("window_start"),
+            window_end=data.get("window_end"),
+            reason=data.get("reason", ""),
+            created_by=data.get("created_by", "unknown"),
+            created_at=data.get("created_at", now_iso()),
+            expires_at=data.get("expires_at"),
+            metadata=dict(data.get("metadata", {})),
+        )
+
+    @classmethod
+    def from_json(cls, content: str) -> "ReleaseLock":
+        return cls.from_dict(json.loads(content))
+
+    def is_expired(self, at_time: Optional[datetime] = None) -> bool:
+        """Return True if this lock has already expired."""
+        if not self.expires_at:
+            return False
+        try:
+            exp = datetime.fromisoformat(self.expires_at.replace("Z", "+00:00"))
+        except Exception:
+            return False
+        if at_time is None:
+            at = datetime.now(tz=exp.tzinfo)
+        else:
+            if at_time.tzinfo is None:
+                at = at_time.replace(tzinfo=exp.tzinfo)
+            else:
+                at = at_time.astimezone(exp.tzinfo)
+        return at >= exp
+
+    def covers_environment(self, env: str) -> bool:
+        """Return True if this lock covers the given environment."""
+        if self.is_expired():
+            return False
+        if self.scope == LockScope.GLOBAL:
+            return True
+        if self.scope == LockScope.ENVIRONMENT:
+            return (self.environment or "").lower() == (env or "").lower()
+        if self.scope == LockScope.SERVICE:
+            if self.environment is None:
+                return True
+            return (self.environment or "").lower() == (env or "").lower()
+        return False
+
+    def covers_service(self, service: str, env: Optional[str] = None) -> bool:
+        """Return True if this lock covers a specific service (optionally w/ env)."""
+        if self.is_expired():
+            return False
+        if self.scope == LockScope.GLOBAL:
+            return True
+        if self.scope == LockScope.ENVIRONMENT:
+            if env is None:
+                return False
+            return (self.environment or "").lower() == (env or "").lower()
+        if self.scope == LockScope.SERVICE:
+            svc_match = (self.service_name or "").lower() == (service or "").lower()
+            if not svc_match:
+                return False
+            if self.environment is None:
+                return True
+            if env is None:
+                return False
+            return (self.environment or "").lower() == (env or "").lower()
+        return False
+
+    def overlaps_window(self, start: str, end: str) -> bool:
+        """Return True if lock's time window overlaps the given [start, end)."""
+        if self.is_expired():
+            return False
+        if self.scope != LockScope.WINDOW:
+            return False
+        if not (self.window_start and self.window_end and start and end):
+            return False
+        try:
+            a_s = datetime.fromisoformat(self.window_start.replace("Z", "+00:00"))
+            a_e = datetime.fromisoformat(self.window_end.replace("Z", "+00:00"))
+            b_s = datetime.fromisoformat(start.replace("Z", "+00:00"))
+            b_e = datetime.fromisoformat(end.replace("Z", "+00:00"))
+            return a_s < b_e and b_s < a_e
+        except Exception:
+            return False
+
+    def description_short(self) -> str:
+        """Human-readable short description of the lock."""
+        scope = self.scope.value
+        if self.scope == LockScope.GLOBAL:
+            return "GLOBAL LOCK"
+        if self.scope == LockScope.ENVIRONMENT:
+            return f"ENV={self.environment}"
+        if self.scope == LockScope.SERVICE:
+            env = f"@{self.environment}" if self.environment else ""
+            return f"SERVICE={self.service_name}{env}"
+        if self.scope == LockScope.WINDOW:
+            return f"WINDOW={self.window_id or ''} {self.window_start}~{self.window_end}"
+        return scope
+
+
+@dataclass
+class LockPermissionConfig:
+    """Simple role-based permission config for lock operations.
+
+    Defines which roles are allowed to:
+      - create_locks:           create new locks
+      - remove_any_lock:        remove / overwrite locks created by others
+      - remove_own_lock:        remove / overwrite locks created by self
+    """
+    roles: Dict[str, List[str]] = field(default_factory=lambda: {
+        "SRE_ADMIN": ["create_locks", "remove_any_lock", "remove_own_lock"],
+        "SRE_OPS": ["create_locks", "remove_own_lock"],
+        "DEV": ["create_locks"],
+        "VIEWER": [],
+    })
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    def to_json(self, indent: int = 2) -> str:
+        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "LockPermissionConfig":
+        roles = dict(data.get("roles", {}))
+        return cls(roles=roles)
+
+    @classmethod
+    def from_json(cls, content: str) -> "LockPermissionConfig":
+        return cls.from_dict(json.loads(content))
+
+    def can_create(self, role: str) -> bool:
+        perms = self.roles.get(role, [])
+        return "create_locks" in perms
+
+    def can_remove(self, role: str, lock_owner: str, current_user: str) -> bool:
+        perms = self.roles.get(role, [])
+        if "remove_any_lock" in perms:
+            return True
+        if "remove_own_lock" in perms and lock_owner == current_user:
+            return True
+        return False
+

@@ -1,0 +1,67 @@
+{
+  "run_id": "RUN-20260612144331-3b4d08dc",
+  "command": "lock",
+  "started_at": "2026-06-12T14:43:31Z",
+  "finished_at": "2026-06-12T14:43:31Z",
+  "exit_code": 30,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "lock",
+      "lock_action": "add",
+      "func": "<function _run at 0x0000026F4933B740>",
+      "scope": "environment",
+      "environment": "production",
+      "service": null,
+      "window_start": null,
+      "window_end": null,
+      "window_id": null,
+      "reason": "Duplicate test",
+      "by": "reviewer@test.com",
+      "expires": null,
+      "overwrite": false,
+      "as_role": "SRE_ADMIN",
+      "lock_id": null
+    },
+    "command": "lock",
+    "run_id": "RUN-20260612144331-3b4d08dc"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T14:43:31Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[lock] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612144331-3b4d08dc"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:43:31Z",
+      "level": "ERROR",
+      "module": "cmd.lock",
+      "message": "Lock already exists: Duplicate lock scope: ENV=production collides with existing lock LOCK-20260612144321-D724BA5C.",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T14:43:31Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[lock] Finished",
+      "extra": {
+        "run_id": "RUN-20260612144331-3b4d08dc",
+        "exit_code": 30
+      }
+    }
+  ],
+  "archive_path": null
+}

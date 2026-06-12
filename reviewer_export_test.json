@@ -1,0 +1,35 @@
+{
+  "exported_at": "2026-06-12T14:43:55Z",
+  "count": 2,
+  "include_expired": false,
+  "locks": [
+    {
+      "lock_id": "LOCK-20260612144321-D724BA5C",
+      "scope": "environment",
+      "environment": "production",
+      "service_name": null,
+      "window_id": null,
+      "window_start": null,
+      "window_end": null,
+      "reason": "Production freeze for holiday",
+      "created_by": "reviewer@test.com",
+      "created_at": "2026-06-12T14:43:21Z",
+      "expires_at": null,
+      "metadata": {}
+    },
+    {
+      "lock_id": "LOCK-20260612144321-C432AB5C",
+      "scope": "service",
+      "environment": "staging",
+      "service_name": "auth-service",
+      "window_id": null,
+      "window_start": null,
+      "window_end": null,
+      "reason": "Auth service migration in progress",
+      "created_by": "reviewer@test.com",
+      "created_at": "2026-06-12T14:43:21Z",
+      "expires_at": null,
+      "metadata": {}
+    }
+  ]
+}

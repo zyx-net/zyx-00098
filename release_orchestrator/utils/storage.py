@@ -17,6 +17,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from ..core.models import (
     ExecutionSnapshot,
+    LockPermissionConfig,
+    ReleaseLock,
     ReleaseManifest,
     ReleasePlan,
     ValidationResult,
@@ -49,6 +51,11 @@ SCHEDULE_SUMMARY_FILE = "schedule_summary.md"
 CONFIG_FILE = "config.json"
 SCHEMES_DIR = "schemes"
 SCHEME_HISTORY_FILE = "scheme_operations.log"
+LOCKS_DIR = "locks"
+LOCKS_INDEX_FILE = "locks_index.json"
+LOCK_HISTORY_FILE = "lock_operations.log"
+LOCK_PERMISSION_FILE = "lock_permissions.json"
+DEFAULT_LOCK_PERMISSIONS = LockPermissionConfig()
 
 
 def get_work_dir(base: Optional[str] = None) -> Path:
@@ -614,3 +621,423 @@ def export_full_manifest_archive(
 
     LOG.info(MODULE, f"Exported manifest archive", output=str(archive_path))
     return archive_path
+
+
+# ---------------------------------------------------------------------------
+# Release Lock persistence
+# ---------------------------------------------------------------------------
+
+VALID_ENVIRONMENTS = {"dev", "test", "staging", "production"}
+
+
+def _locks_dir(base: Optional[str] = None) -> Path:
+    work = get_work_dir(base)
+    d = work / LOCKS_DIR
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _locks_index_path(base: Optional[str] = None) -> Path:
+    return _locks_dir(base).parent / LOCKS_INDEX_FILE
+
+
+def _lock_file_path(lock_id: str, base: Optional[str] = None) -> Path:
+    return _locks_dir(base) / f"{lock_id}.json"
+
+
+def _generate_lock_id() -> str:
+    """Generate a short, sortable lock id."""
+    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    import secrets
+    return f"LOCK-{ts}-{secrets.token_hex(4).upper()}"
+
+
+def _validate_lock(lock: ReleaseLock) -> List[str]:
+    """Validate a lock, return a list of error strings."""
+    errors: List[str] = []
+    from ..core.models import LockScope
+
+    if lock.environment and lock.environment.lower() not in VALID_ENVIRONMENTS:
+        errors.append(
+            f"Invalid environment '{lock.environment}'. "
+            f"Must be one of: {sorted(VALID_ENVIRONMENTS)}"
+        )
+
+    if lock.scope == LockScope.ENVIRONMENT:
+        if not lock.environment:
+            errors.append("ENVIRONMENT scope requires 'environment' field")
+
+    if lock.scope == LockScope.SERVICE:
+        if not lock.service_name or not lock.service_name.strip():
+            errors.append("SERVICE scope requires non-empty 'service_name'")
+
+    if lock.scope == LockScope.WINDOW:
+        if not (lock.window_start and lock.window_end):
+            errors.append("WINDOW scope requires 'window_start' and 'window_end'")
+        else:
+            try:
+                s = datetime.fromisoformat(lock.window_start.replace("Z", "+00:00"))
+                e = datetime.fromisoformat(lock.window_end.replace("Z", "+00:00"))
+                if s >= e:
+                    errors.append("WINDOW lock: window_start must be earlier than window_end")
+            except Exception as exc:
+                errors.append(f"WINDOW lock: invalid ISO datetime: {exc}")
+
+    if lock.expires_at:
+        try:
+            exp = datetime.fromisoformat(lock.expires_at.replace("Z", "+00:00"))
+        except Exception as exc:
+            errors.append(f"Invalid expires_at ISO datetime: {exc}")
+
+    return errors
+
+
+def _read_lock_index(base: Optional[str] = None) -> Dict[str, str]:
+    path = _locks_index_path(base)
+    if not path.exists():
+        return {}
+    try:
+        data = load_json(path)
+        if isinstance(data, dict):
+            return {str(k): str(v) for k, v in data.items()}
+    except Exception:
+        pass
+    return {}
+
+
+def _write_lock_index(index: Dict[str, str], base: Optional[str] = None) -> None:
+    save_json(index, _locks_index_path(base))
+
+
+def list_locks(base: Optional[str] = None, include_expired: bool = False) -> List[ReleaseLock]:
+    """List all saved locks.
+
+    Args:
+        base: Optional base work directory.
+        include_expired: If True, also return locks that have already expired.
+
+    Returns:
+        List of ReleaseLock instances sorted by created_at (newest first).
+    """
+    index = _read_lock_index(base)
+    locks: List[ReleaseLock] = []
+    for lock_id in index:
+        path = _lock_file_path(lock_id, base)
+        if not path.exists():
+            continue
+        try:
+            lock = ReleaseLock.from_dict(load_json(path))
+            if not include_expired and lock.is_expired():
+                continue
+            locks.append(lock)
+        except Exception:
+            continue
+    locks.sort(key=lambda l: l.created_at, reverse=True)
+    return locks
+
+
+def get_lock(lock_id: str, base: Optional[str] = None) -> Optional[ReleaseLock]:
+    """Load a single lock by id, returning None if not found or expired."""
+    path = _lock_file_path(lock_id, base)
+    if not path.exists():
+        return None
+    try:
+        lock = ReleaseLock.from_dict(load_json(path))
+        return lock
+    except Exception:
+        return None
+
+
+def save_lock(
+    lock: ReleaseLock,
+    base: Optional[str] = None,
+    overwrite: bool = False,
+) -> ReleaseLock:
+    """Persist a lock to disk.
+
+    Args:
+        lock: The lock to save.
+        base: Optional base work directory.
+        overwrite: If True, allow overwriting an existing lock with the same id.
+
+    Returns:
+        The saved lock (with generated lock_id if not provided).
+
+    Raises:
+        ValueError: If lock validation fails.
+        FileExistsError: If lock_id exists and overwrite=False.
+        FileExistsError: If a lock with identical scope/parameters already exists.
+        IOError: If writing to disk fails.
+    """
+    from ..core.models import LockScope
+
+    errors = _validate_lock(lock)
+    if errors:
+        raise ValueError("Lock validation failed: " + "; ".join(errors))
+
+    if not lock.lock_id:
+        lock.lock_id = _generate_lock_id()
+
+    existing = list_locks(base, include_expired=True)
+    for e in existing:
+        if e.lock_id == lock.lock_id:
+            if not overwrite:
+                raise FileExistsError(
+                    f"Lock with id '{lock.lock_id}' already exists. "
+                    f"Use overwrite=True to replace it."
+                )
+            continue
+        if e.is_expired():
+            continue
+        if e.scope != lock.scope:
+            continue
+        duplicate = False
+        if lock.scope == LockScope.GLOBAL:
+            duplicate = True
+        elif lock.scope == LockScope.ENVIRONMENT:
+            duplicate = (e.environment or "").lower() == (lock.environment or "").lower()
+        elif lock.scope == LockScope.SERVICE:
+            same_svc = (e.service_name or "").lower() == (lock.service_name or "").lower()
+            same_env = (e.environment or "").lower() == (lock.environment or "").lower()
+            both_env_none = e.environment is None and lock.environment is None
+            duplicate = same_svc and (same_env or both_env_none)
+        elif lock.scope == LockScope.WINDOW:
+            if e.window_start and e.window_end and lock.window_start and lock.window_end:
+                duplicate = e.overlaps_window(lock.window_start, lock.window_end)
+        if duplicate:
+            raise FileExistsError(
+                f"Duplicate lock scope: {lock.description_short()} "
+                f"collides with existing lock {e.lock_id}."
+            )
+
+    path = _lock_file_path(lock.lock_id, base)
+    try:
+        save_json(lock.to_dict(), path)
+        index = _read_lock_index(base)
+        index[lock.lock_id] = now_iso()
+        _write_lock_index(index, base)
+    except IOError as exc:
+        raise IOError(f"Failed to write lock file: {exc}")
+
+    _log_lock_operation(
+        "save" if overwrite and path.exists() else "create",
+        lock.lock_id,
+        base=base,
+        extra={"scope": lock.scope.value, "overwrite": overwrite},
+    )
+    return lock
+
+
+def delete_lock(lock_id: str, base: Optional[str] = None) -> bool:
+    """Delete a lock by id. Returns True if it existed and was removed.
+
+    Raises:
+        FileNotFoundError: If no such lock exists.
+        IOError: If removing the file fails.
+    """
+    path = _lock_file_path(lock_id, base)
+    if not path.exists():
+        raise FileNotFoundError(f"Lock not found: '{lock_id}'")
+
+    lock = get_lock(lock_id, base)
+    scope_val = lock.scope.value if lock else "unknown"
+
+    try:
+        path.unlink()
+        index = _read_lock_index(base)
+        if lock_id in index:
+            del index[lock_id]
+            _write_lock_index(index, base)
+    except OSError as exc:
+        raise IOError(f"Failed to delete lock '{lock_id}': {exc}")
+
+    _log_lock_operation(
+        "delete",
+        lock_id,
+        base=base,
+        extra={"scope": scope_val},
+    )
+    return True
+
+
+def check_locks_for_operation(
+    base: Optional[str] = None,
+    environment: Optional[str] = None,
+    service_names: Optional[List[str]] = None,
+    window_start: Optional[str] = None,
+    window_end: Optional[str] = None,
+) -> List[ReleaseLock]:
+    """Return the list of active locks that block an operation.
+
+    Args:
+        base: Optional base work directory.
+        environment: Target environment of the operation.
+        service_names: List of component/service names involved.
+        window_start: ISO datetime start of scheduling window.
+        window_end: ISO datetime end of scheduling window.
+
+    Returns:
+        List of ReleaseLock instances that would block the operation.
+    """
+    active_locks = list_locks(base, include_expired=False)
+    if not active_locks:
+        return []
+
+    blockers: List[ReleaseLock] = []
+    for lock in active_locks:
+        blocks = False
+        if lock.scope.value == "global":
+            blocks = True
+        elif lock.scope.value == "environment" and environment:
+            blocks = lock.covers_environment(environment)
+        elif lock.scope.value == "service" and service_names:
+            for svc in service_names:
+                if lock.covers_service(svc, environment):
+                    blocks = True
+                    break
+        elif lock.scope.value == "window" and window_start and window_end:
+            blocks = lock.overlaps_window(window_start, window_end)
+            if not blocks and environment:
+                blocks = lock.covers_environment(environment)
+        if blocks:
+            blockers.append(lock)
+    return blockers
+
+
+def export_all_locks(
+    output_path: str,
+    base: Optional[str] = None,
+    include_expired: bool = False,
+) -> Path:
+    """Export all locks into a single JSON file.
+
+    Returns:
+        The Path the file was written to.
+    """
+    locks = list_locks(base, include_expired=include_expired)
+    data = {
+        "exported_at": now_iso(),
+        "count": len(locks),
+        "include_expired": include_expired,
+        "locks": [l.to_dict() for l in locks],
+    }
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    save_json(data, out)
+    return out
+
+
+def import_locks_from_file(
+    input_path: str,
+    base: Optional[str] = None,
+    overwrite: bool = False,
+    created_by: Optional[str] = None,
+) -> Tuple[int, List[str]]:
+    """Import locks from a JSON export file.
+
+    Args:
+        input_path: Path to the locks JSON export file.
+        base: Optional base work directory.
+        overwrite: If True, overwrite locks with the same id.
+        created_by: If provided, override created_by for all imported locks.
+
+    Returns:
+        Tuple of (imported_count, [list of error strings]).
+
+    Raises:
+        FileNotFoundError: If input_path doesn't exist.
+        ValueError: If the file has an invalid structure.
+        IOError: If reading fails.
+    """
+    path = Path(input_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Locks import file not found: {input_path}")
+    try:
+        data = load_json(path)
+    except Exception as exc:
+        raise ValueError(f"Invalid locks JSON: {exc}")
+
+    if not isinstance(data, dict) or "locks" not in data:
+        raise ValueError(
+            "Invalid locks export file: missing 'locks' array at top level"
+        )
+
+    imported = 0
+    errors: List[str] = []
+    raw_list = data.get("locks", [])
+    if not isinstance(raw_list, list):
+        raise ValueError("'locks' must be an array")
+
+    for i, raw in enumerate(raw_list):
+        try:
+            lock = ReleaseLock.from_dict(raw)
+            if created_by:
+                lock.created_by = created_by
+            save_lock(lock, base=base, overwrite=overwrite)
+            imported += 1
+        except ValueError as exc:
+            errors.append(f"Lock #{i} ({raw.get('lock_id', '?')}) invalid: {exc}")
+        except FileExistsError as exc:
+            errors.append(f"Lock #{i} ({raw.get('lock_id', '?')}) skipped: {exc}")
+        except Exception as exc:
+            errors.append(f"Lock #{i} ({raw.get('lock_id', '?')}) error: {exc}")
+    return imported, errors
+
+
+def _log_lock_operation(
+    action: str,
+    lock_id: str,
+    base: Optional[str] = None,
+    extra: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Append a lock operation to the lock operations log."""
+    import getpass
+    work = get_work_dir(base)
+    log_path = work / LOCK_HISTORY_FILE
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "timestamp": now_iso(),
+            "action": action,
+            "lock_id": lock_id,
+            "user": getpass.getuser() or "unknown",
+            "extra": extra or {},
+        }
+        with log_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
+def load_lock_permissions(base: Optional[str] = None) -> LockPermissionConfig:
+    """Load lock permission config from disk, falling back to defaults.
+
+    Resolution order:
+      1. <work_dir>/lock_permissions.json
+      2. <cwd>/lock_permissions.json
+      3. Built-in default
+    """
+    candidates: List[Path] = []
+    if base:
+        candidates.append(get_work_dir(base) / LOCK_PERMISSION_FILE)
+    candidates.append(Path.cwd() / LOCK_PERMISSION_FILE)
+
+    for c in candidates:
+        if c.exists():
+            try:
+                return LockPermissionConfig.from_dict(load_json(c))
+            except Exception:
+                continue
+    return DEFAULT_LOCK_PERMISSIONS
+
+
+def save_lock_permissions(
+    config: LockPermissionConfig,
+    base: Optional[str] = None,
+) -> Path:
+    """Write a lock permission config to the work directory."""
+    work = get_work_dir(base)
+    path = work / LOCK_PERMISSION_FILE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    save_json(config.to_dict(), path)
+    return path

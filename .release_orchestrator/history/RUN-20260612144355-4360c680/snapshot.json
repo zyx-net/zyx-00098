@@ -1,0 +1,52 @@
+{
+  "run_id": "RUN-20260612144355-4360c680",
+  "command": "lock",
+  "started_at": "2026-06-12T14:43:55Z",
+  "finished_at": "2026-06-12T14:43:55Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "lock",
+      "lock_action": "remove",
+      "func": "<function _run at 0x000001B98B64B740>",
+      "lock_id": "LOCK-20260612144321-D724BA5C",
+      "by": "reviewer@test.com",
+      "as_role": "SRE_ADMIN",
+      "force": false
+    },
+    "command": "lock",
+    "run_id": "RUN-20260612144355-4360c680"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T14:43:55Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[lock] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612144355-4360c680"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:43:55Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[lock] Finished",
+      "extra": {
+        "run_id": "RUN-20260612144355-4360c680",
+        "exit_code": 0
+      }
+    }
+  ],
+  "archive_path": null
+}

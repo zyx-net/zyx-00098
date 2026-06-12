@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "remove",
+    "func": "<function _run at 0x00000221DB36B740>",
+    "lock_id": "LOCK-20260612144321-D724BA5C",
+    "by": "guest@test.com",
+    "as_role": "VIEWER",
+    "force": false
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612144341-c37efc91"
+}

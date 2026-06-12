@@ -1,0 +1,59 @@
+{
+  "run_id": "RUN-20260612144341-c37efc91",
+  "command": "lock",
+  "started_at": "2026-06-12T14:43:41Z",
+  "finished_at": "2026-06-12T14:43:41Z",
+  "exit_code": 34,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "lock",
+      "lock_action": "remove",
+      "func": "<function _run at 0x00000221DB36B740>",
+      "lock_id": "LOCK-20260612144321-D724BA5C",
+      "by": "guest@test.com",
+      "as_role": "VIEWER",
+      "force": false
+    },
+    "command": "lock",
+    "run_id": "RUN-20260612144341-c37efc91"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T14:43:41Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[lock] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612144341-c37efc91"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:43:41Z",
+      "level": "ERROR",
+      "module": "cmd.lock",
+      "message": "Lock remove permission denied: role=VIEWER actor=guest@test.com lock_owner=reviewer@test.com",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T14:43:41Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[lock] Finished",
+      "extra": {
+        "run_id": "RUN-20260612144341-c37efc91",
+        "exit_code": 34
+      }
+    }
+  ],
+  "archive_path": null
+}

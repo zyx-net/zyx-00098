@@ -1,0 +1,19 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "examples/clean_manifest.json",
+    "policy": null,
+    "output": "archives/reviewer_lock_bundle",
+    "format": "zip",
+    "no_dryrun": true,
+    "seed": null,
+    "compare_with": null,
+    "windows": null,
+    "waves": null,
+    "func": "<function _run at 0x0000018C979DACF0>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612145039-6571efa9"
+}

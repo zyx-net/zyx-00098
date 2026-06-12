@@ -1,0 +1,13 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "list",
+    "func": "<function _run at 0x000001EA5DE5B740>",
+    "include_expired": false,
+    "json": false
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612144331-b7ea2ad2"
+}

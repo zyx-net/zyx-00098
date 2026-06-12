@@ -1,0 +1,326 @@
+{
+  "run_id": "RUN-20260612144911-4fafca46",
+  "command": "schedule",
+  "started_at": "2026-06-12T14:49:11Z",
+  "finished_at": "2026-06-12T14:49:11Z",
+  "exit_code": 5,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "schedule",
+      "manifest": "examples/manifest_with_inline_windows.json",
+      "policy": null,
+      "windows": null,
+      "waves": null,
+      "output": null,
+      "lock": null,
+      "unlock": null,
+      "by": "admin@corp.com",
+      "skip_validate": false,
+      "func": "<function _run at 0x000002214A6549E0>"
+    },
+    "command": "schedule",
+    "run_id": "RUN-20260612144911-4fafca46"
+  },
+  "manifest_snapshot": {
+    "manifest_version": "1.0",
+    "release_id": "REL-INLINE-TEST",
+    "title": "Inline Windows Test",
+    "target_environment": "staging",
+    "scheduled_date": null,
+    "components": [
+      {
+        "name": "svc-inline",
+        "version": "1.0.0",
+        "environment": "staging",
+        "artifact": {
+          "path": "",
+          "checksum": "",
+          "checksum_algorithm": "sha256",
+          "size_bytes": null
+        },
+        "dependencies": [],
+        "approvals": [],
+        "deployed_version": null,
+        "description": null,
+        "rollback_target_version": null,
+        "tags": []
+      }
+    ],
+    "description": null,
+    "created_by": null,
+    "created_at": null,
+    "release_windows": [
+      {
+        "window_id": "WIN-MANIFEST",
+        "name": "Manifest Inline Window",
+        "start_time": "2026-06-15T09:00:00Z",
+        "end_time": "2026-06-15T17:00:00Z",
+        "timezone": "UTC",
+        "capacity_max": null,
+        "allowed_environments": [
+          "staging"
+        ],
+        "required_approval_roles": [],
+        "freeze_periods": [],
+        "locked": false,
+        "locked_by": null,
+        "locked_at": null,
+        "description": null,
+        "tags": []
+      }
+    ],
+    "waves": []
+  },
+  "policy_snapshot": {
+    "policy_version": "1.0",
+    "default_environment": "production",
+    "env_rules": {
+      "dev": {
+        "require_approval": false,
+        "allow_version_downgrade": true,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": false
+      },
+      "test": {
+        "require_approval": false,
+        "allow_version_downgrade": false,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": true
+      },
+      "staging": {
+        "require_approval": true,
+        "allow_version_downgrade": false,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": true
+      },
+      "production": {
+        "require_approval": true,
+        "allow_version_downgrade": false,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": true
+      }
+    }
+  },
+  "policy_summary": null,
+  "validation_result": {
+    "timestamp": "2026-06-12T14:49:11Z",
+    "passed": false,
+    "issues": [
+      {
+        "component": "svc-inline",
+        "severity": "info",
+        "issue_code": "NO_DEPLOYED_VERSION",
+        "message": "No deployed version recorded for svc-inline",
+        "details": null
+      },
+      {
+        "component": "svc-inline",
+        "severity": "warning",
+        "issue_code": "CHECKSUM_DECLARATION_INCOMPLETE",
+        "message": "Component svc-inline has incomplete artifact/path declaration",
+        "details": null
+      },
+      {
+        "component": "svc-inline",
+        "severity": "error",
+        "issue_code": "APPROVAL_MISSING",
+        "message": "Component svc-inline (staging) has no APPROVED approval record (required by policy)",
+        "details": {
+          "approvals_count": 0,
+          "policy": "require_approval"
+        }
+      }
+    ],
+    "summary": {
+      "total": 3,
+      "errors": 1,
+      "warnings": 1,
+      "infos": 1
+    }
+  },
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": {
+    "schedule_id": "SCHED-20260612144911-e2f53ace",
+    "generated_at": "2026-06-12T14:49:11Z",
+    "windows": [
+      {
+        "window_id": "WIN-MANIFEST",
+        "name": "Manifest Inline Window",
+        "start_time": "2026-06-15T09:00:00Z",
+        "end_time": "2026-06-15T17:00:00Z",
+        "timezone": "UTC",
+        "capacity_max": null,
+        "allowed_environments": [
+          "staging"
+        ],
+        "required_approval_roles": [],
+        "freeze_periods": [],
+        "locked": false,
+        "locked_by": null,
+        "locked_at": null,
+        "description": null,
+        "tags": []
+      }
+    ],
+    "waves": [],
+    "entries": [],
+    "issues": [
+      {
+        "component": "svc-inline",
+        "severity": "error",
+        "issue_code": "SCHEDULE_FAILED",
+        "message": "Window Manifest Inline Window: Missing required approval for environment",
+        "details": null
+      }
+    ],
+    "unscheduled_components": [
+      {
+        "component": "svc-inline",
+        "version": "1.0.0",
+        "reasons": [
+          "Window Manifest Inline Window: Missing required approval for environment"
+        ]
+      }
+    ],
+    "total_scheduled": 0,
+    "total_unscheduled": 1,
+    "summary": {
+      "windows": 1,
+      "waves": 0,
+      "scheduled": 0,
+      "unscheduled": 1,
+      "errors": 1,
+      "warnings": 0
+    }
+  },
+  "logs": [
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[schedule] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612144911-4fafca46"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from examples/manifest_with_inline_windows.json",
+      "extra": {
+        "components": 1
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "policy_loader",
+      "message": "No policy file found - using built-in defaults",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "cmd.schedule",
+      "message": "Loaded 1 windows from manifest",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "Starting validation",
+      "extra": {
+        "release_id": "REL-INLINE-TEST"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[NO_DEPLOYED_VERSION] No deployed version recorded for svc-inline",
+      "extra": {
+        "component": "svc-inline"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "WARNING",
+      "module": "validator",
+      "message": "[CHECKSUM_DECLARATION_INCOMPLETE] Component svc-inline has incomplete artifact/path declaration",
+      "extra": {
+        "component": "svc-inline"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "ERROR",
+      "module": "validator",
+      "message": "[APPROVAL_MISSING] Component svc-inline (staging) has no APPROVED approval record (required by policy)",
+      "extra": {
+        "component": "svc-inline"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "Validation complete",
+      "extra": {
+        "passed": false,
+        "total": 3,
+        "errors": 1,
+        "warnings": 1
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "scheduler",
+      "message": "Starting scheduling",
+      "extra": {
+        "release_id": "REL-INLINE-TEST",
+        "windows": 1,
+        "waves": 0
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "ERROR",
+      "module": "scheduler",
+      "message": "[SCHEDULE_FAILED] Window Manifest Inline Window: Missing required approval for environment",
+      "extra": {
+        "component": "svc-inline"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "scheduler",
+      "message": "Scheduling complete",
+      "extra": {
+        "schedule_id": "SCHED-20260612144911-e2f53ace",
+        "scheduled": 0,
+        "unscheduled": 1,
+        "errors": 1,
+        "warnings": 0
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[schedule] Finished",
+      "extra": {
+        "run_id": "RUN-20260612144911-4fafca46",
+        "exit_code": 5
+      }
+    }
+  ],
+  "archive_path": null
+}

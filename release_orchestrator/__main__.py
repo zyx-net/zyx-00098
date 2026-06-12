@@ -34,6 +34,7 @@ from .commands.dryrun_cmd import add_parser as add_dryrun
 from .commands.rollback_cmd import add_parser as add_rollback
 from .commands.export_cmd import add_parser as add_export
 from .commands.history_cmd import add_parser as add_history
+from .commands.lock_cmd import add_parser as add_lock
 from .commands.schedule_cmd import add_parser as add_schedule
 from .commands.scheme_cmd import add_parser as add_scheme
 from .utils.exit_codes import (
@@ -66,6 +67,7 @@ def _build_parser() -> argparse.ArgumentParser:
     add_rollback(sub)
     add_export(sub)
     add_history(sub)
+    add_lock(sub)
     add_schedule(sub)
     add_scheme(sub)
 
@@ -138,6 +140,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             command_name = "schedule"
         elif "scheme" in mod:
             command_name = "scheme"
+        elif "lock" in mod:
+            command_name = "lock"
         else:
             command_name = "unknown"
 

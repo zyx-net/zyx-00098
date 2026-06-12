@@ -1,0 +1,14 @@
+{
+  "lock_id": "LOCK-20260612144321-D724BA5C",
+  "scope": "environment",
+  "environment": "production",
+  "service_name": null,
+  "window_id": null,
+  "window_start": null,
+  "window_end": null,
+  "reason": "Production freeze for holiday",
+  "created_by": "reviewer@test.com",
+  "created_at": "2026-06-12T14:43:21Z",
+  "expires_at": null,
+  "metadata": {}
+}

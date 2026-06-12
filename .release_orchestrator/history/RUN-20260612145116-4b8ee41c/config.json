@@ -1,0 +1,16 @@
+{
+  "error": "'version'",
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "rollback-plan",
+    "manifest": "examples/manifest_with_inline_windows.json",
+    "plan": null,
+    "output": null,
+    "only_failed": false,
+    "failed": null,
+    "func": "<function _run at 0x000001322910D9B0>"
+  },
+  "command": "rollback-plan",
+  "run_id": "RUN-20260612145116-4b8ee41c"
+}

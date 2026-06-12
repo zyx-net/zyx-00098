@@ -1,0 +1,23 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "add",
+    "func": "<function _run at 0x0000021DB6E7B740>",
+    "scope": "window",
+    "environment": null,
+    "service": null,
+    "window_start": "2026-07-03T00:00:00Z",
+    "window_end": "2026-07-10T00:00:00Z",
+    "window_id": null,
+    "reason": "Overlapping window test",
+    "by": "reviewer@test.com",
+    "expires": null,
+    "overwrite": false,
+    "as_role": "SRE_ADMIN",
+    "lock_id": null
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612144406-3b60ebf5"
+}

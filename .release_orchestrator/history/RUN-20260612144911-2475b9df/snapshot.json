@@ -1,0 +1,285 @@
+{
+  "run_id": "RUN-20260612144911-2475b9df",
+  "command": "plan",
+  "started_at": "2026-06-12T14:49:11Z",
+  "finished_at": "2026-06-12T14:49:11Z",
+  "exit_code": 35,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "plan",
+      "manifest": "examples/sample_manifest.json",
+      "policy": null,
+      "output": null,
+      "skip_validate": false,
+      "windows": null,
+      "waves": null,
+      "func": "<function _run at 0x000001CF8BEAC670>"
+    },
+    "command": "plan",
+    "run_id": "RUN-20260612144911-2475b9df"
+  },
+  "manifest_snapshot": {
+    "manifest_version": "1.0",
+    "release_id": "REL-20260612020904-aabe7305",
+    "title": "Q3 Offline Release Bundle",
+    "target_environment": "production",
+    "scheduled_date": "2026-06-13",
+    "components": [
+      {
+        "name": "common-utils",
+        "version": "2.3.1",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\common-utils-2.3.1.pkg",
+          "checksum": "5326bbfabb57c6ef8f126d32b85dc449e711ba5df4d0bf84141b88eb0d7d7733",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 28
+        },
+        "dependencies": [],
+        "approvals": [
+          {
+            "approver": "alice@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-07T02:09:04Z",
+            "comment": "Approved by alice@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "2.2.0",
+        "description": "Shared utilities library - base dependency for all services.",
+        "rollback_target_version": "2.2.0",
+        "tags": [
+          "shared",
+          "libs"
+        ]
+      },
+      {
+        "name": "auth-service",
+        "version": "1.5.0",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\auth-service-1.5.0.pkg",
+          "checksum": "cde54063b74d99da85d0101c046a0c82b01904fbe96d11341358e3fa965ed75d",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 28
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "2.3.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "bob@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-09T02:09:04Z",
+            "comment": "Approved by bob@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "1.4.2",
+        "description": "Authentication and SSO service.",
+        "rollback_target_version": "1.4.2",
+        "tags": [
+          "core",
+          "security"
+        ]
+      },
+      {
+        "name": "order-service",
+        "version": "3.1.0",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\order-service-3.1.0.pkg",
+          "checksum": "345471e034b3650a46a17765d762a5c8eb6f26a6fb5c051f67dac29a4f97129a",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 29
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "2.3.0",
+            "max_version": null,
+            "required": true
+          },
+          {
+            "name": "auth-service",
+            "min_version": "1.5.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "carol@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-11T02:09:04Z",
+            "comment": "Approved by carol@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "3.0.4",
+        "description": "Order management micro-service.",
+        "rollback_target_version": "3.0.4",
+        "tags": [
+          "business"
+        ]
+      },
+      {
+        "name": "payment-service",
+        "version": "2.0.2",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\payment-service-2.0.2.pkg",
+          "checksum": "0352801879459dbefc57b30d01583803db81cfbe1584597f773d4c7d99b21680",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 31
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "2.2.0",
+            "max_version": null,
+            "required": true
+          },
+          {
+            "name": "order-service",
+            "min_version": "3.0.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "dave@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-11T02:09:04Z",
+            "comment": "Approved by dave@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "2.0.1",
+        "description": "Payment processing service (PCI-DSS compliant).",
+        "rollback_target_version": "2.0.1",
+        "tags": [
+          "pci",
+          "payment"
+        ]
+      },
+      {
+        "name": "legacy-reporting",
+        "version": "1.0.3",
+        "environment": "production",
+        "artifact": {
+          "path": "examples\\artifacts\\legacy-reporting-1.0.3.pkg",
+          "checksum": "02b60b3b9ed309b730abc7006e62bf07ad5b911bc8ae57c4cf001bad35819e7a",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 32
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "1.0.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [],
+        "deployed_version": "1.1.0",
+        "description": "(INTENTIONAL ERROR) Version downgrade + missing approval + bad checksum.",
+        "rollback_target_version": "1.0.9",
+        "tags": [
+          "legacy",
+          "error-demo"
+        ]
+      }
+    ],
+    "description": "Sample offline release manifest generated by `release-orchestrator init`.",
+    "created_by": "release-orchestrator",
+    "created_at": "2026-06-12T02:09:04Z",
+    "release_windows": [],
+    "waves": []
+  },
+  "policy_snapshot": {
+    "policy_version": "1.0",
+    "default_environment": "production",
+    "env_rules": {
+      "dev": {
+        "require_approval": false,
+        "allow_version_downgrade": true,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": false
+      },
+      "test": {
+        "require_approval": false,
+        "allow_version_downgrade": false,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": true
+      },
+      "staging": {
+        "require_approval": true,
+        "allow_version_downgrade": false,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": true
+      },
+      "production": {
+        "require_approval": true,
+        "allow_version_downgrade": false,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": true
+      }
+    }
+  },
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[plan] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612144911-2475b9df"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from examples/sample_manifest.json",
+      "extra": {
+        "components": 5
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "policy_loader",
+      "message": "No policy file found - using built-in defaults",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "ERROR",
+      "module": "cmd.plan",
+      "message": "Plan blocked by 1 active lock(s)",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T14:49:11Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[plan] Finished",
+      "extra": {
+        "run_id": "RUN-20260612144911-2475b9df",
+        "exit_code": 35
+      }
+    }
+  ],
+  "archive_path": null
+}

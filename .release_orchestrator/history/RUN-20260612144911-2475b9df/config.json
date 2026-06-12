@@ -1,0 +1,16 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "plan",
+    "manifest": "examples/sample_manifest.json",
+    "policy": null,
+    "output": null,
+    "skip_validate": false,
+    "windows": null,
+    "waves": null,
+    "func": "<function _run at 0x000001CF8BEAC670>"
+  },
+  "command": "plan",
+  "run_id": "RUN-20260612144911-2475b9df"
+}

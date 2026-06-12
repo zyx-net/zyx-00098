@@ -1,0 +1,67 @@
+{
+  "run_id": "RUN-20260612144330-8c94e9fa",
+  "command": "lock",
+  "started_at": "2026-06-12T14:43:30Z",
+  "finished_at": "2026-06-12T14:43:30Z",
+  "exit_code": 32,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "lock",
+      "lock_action": "add",
+      "func": "<function _run at 0x000001E45BC9B740>",
+      "scope": "environment",
+      "environment": "invalid_env",
+      "service": null,
+      "window_start": null,
+      "window_end": null,
+      "window_id": null,
+      "reason": "Bad env test",
+      "by": "reviewer@test.com",
+      "expires": null,
+      "overwrite": false,
+      "as_role": "SRE_ADMIN",
+      "lock_id": null
+    },
+    "command": "lock",
+    "run_id": "RUN-20260612144330-8c94e9fa"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T14:43:30Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[lock] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612144330-8c94e9fa"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:43:30Z",
+      "level": "ERROR",
+      "module": "cmd.lock",
+      "message": "Lock validation failed: Lock validation failed: Invalid environment 'invalid_env'. Must be one of: ['dev', 'production', 'staging', 'test']",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T14:43:30Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[lock] Finished",
+      "extra": {
+        "run_id": "RUN-20260612144330-8c94e9fa",
+        "exit_code": 32
+      }
+    }
+  ],
+  "archive_path": null
+}

@@ -1,0 +1,138 @@
+{
+  "run_id": "RUN-20260612145116-4b8ee41c",
+  "command": "rollback-plan",
+  "started_at": "2026-06-12T14:51:16Z",
+  "finished_at": "2026-06-12T14:51:16Z",
+  "exit_code": 99,
+  "config_snapshot": {
+    "error": "'version'",
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "rollback-plan",
+      "manifest": "examples/manifest_with_inline_windows.json",
+      "plan": null,
+      "output": null,
+      "only_failed": false,
+      "failed": null,
+      "func": "<function _run at 0x000001322910D9B0>"
+    },
+    "command": "rollback-plan",
+    "run_id": "RUN-20260612145116-4b8ee41c"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[rollback-plan] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612145116-4b8ee41c"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from examples/manifest_with_inline_windows.json",
+      "extra": {
+        "components": 1
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "Starting validation",
+      "extra": {
+        "release_id": "REL-INLINE-TEST"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[NO_DEPLOYED_VERSION] No deployed version recorded for svc-inline",
+      "extra": {
+        "component": "svc-inline"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "WARNING",
+      "module": "validator",
+      "message": "[CHECKSUM_DECLARATION_INCOMPLETE] Component svc-inline has incomplete artifact/path declaration",
+      "extra": {
+        "component": "svc-inline"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "ERROR",
+      "module": "validator",
+      "message": "[APPROVAL_MISSING] Component svc-inline (staging) has no APPROVED approval record (required by policy)",
+      "extra": {
+        "component": "svc-inline"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "Validation complete",
+      "extra": {
+        "passed": false,
+        "total": 3,
+        "errors": 1,
+        "warnings": 1
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "INFO",
+      "module": "rollback",
+      "message": "Generating rollback plan",
+      "extra": {
+        "release_id": "REL-INLINE-TEST"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "INFO",
+      "module": "rollback",
+      "message": "Rollback plan generated",
+      "extra": {
+        "plan_id": "RBP-20260612145116-114025c6",
+        "steps": 1,
+        "blocked": 1,
+        "total_minutes": 3
+      }
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "ERROR",
+      "module": "cli",
+      "message": "Unhandled exception during 'rollback-plan': 'version'",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T14:51:16Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[rollback-plan] Finished",
+      "extra": {
+        "run_id": "RUN-20260612145116-4b8ee41c",
+        "exit_code": 99
+      }
+    }
+  ],
+  "archive_path": null
+}

@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "remove",
+    "func": "<function _run at 0x000001F615CAB740>",
+    "lock_id": "LOCK-20260612144321-C432AB5C",
+    "by": "reviewer@test.com",
+    "as_role": "SRE_ADMIN",
+    "force": false
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612145024-e9e01fef"
+}

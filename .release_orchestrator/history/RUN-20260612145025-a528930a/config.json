@@ -1,0 +1,23 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "add",
+    "func": "<function _run at 0x000002D764C9B740>",
+    "scope": "window",
+    "environment": null,
+    "service": null,
+    "window_start": "2026-06-15T08:00:00Z",
+    "window_end": "2026-06-15T10:00:00Z",
+    "window_id": null,
+    "reason": "Reviewer June overlap freeze",
+    "by": "reviewer@test.com",
+    "expires": null,
+    "overwrite": false,
+    "as_role": "SRE_ADMIN",
+    "lock_id": null
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612145025-a528930a"
+}

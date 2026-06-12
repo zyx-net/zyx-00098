@@ -12,12 +12,13 @@ from ..core.validator import ValidationEngine
 from ..utils.exit_codes import (
     EXIT_CONFIG_ERROR,
     EXIT_FILE_NOT_FOUND,
+    EXIT_LOCK_BLOCKED_OPERATION,
     EXIT_PLAN_ERROR,
     EXIT_OK,
 )
 from ..utils.logger import get_logger
 from ..utils.policy_loader import PolicyValidationError, load_policy
-from ..utils.storage import load_manifest, save_json
+from ..utils.storage import check_locks_for_operation, load_manifest, save_json
 
 LOG = get_logger()
 MODULE = "cmd.plan"
@@ -64,6 +65,36 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
         return CommandResult(exit_code=EXIT_CONFIG_ERROR.code, run_id="")
 
     policy_dict = policy.to_dict()
+
+    env_val = (
+        manifest.target_environment.value
+        if hasattr(manifest.target_environment, "value")
+        else str(manifest.target_environment)
+    )
+    service_names = [c.name for c in manifest.components] if hasattr(manifest, "components") else None
+    base_dir = getattr(args, "work_dir", None)
+    blockers = check_locks_for_operation(
+        base=base_dir,
+        environment=env_val,
+        service_names=service_names,
+    )
+    if blockers:
+        print(f"\nERROR: Operation blocked by {len(blockers)} active release lock(s):\n")
+        for b in blockers:
+            print(f"  [{b.scope.value.upper()}] {b.lock_id} - {b.description_short()}")
+            if b.reason:
+                print(f"      Reason: {b.reason}")
+            print(f"      Created by: {b.created_by}")
+        LOG.error(MODULE, f"Plan blocked by {len(blockers)} active lock(s)")
+        return CommandResult(
+            exit_code=EXIT_LOCK_BLOCKED_OPERATION.code,
+            run_id="",
+            manifest_snapshot=manifest.to_dict(),
+            extra_artifacts={
+                "policy_snapshot": policy_dict,
+                "blocking_locks": [b.to_dict() for b in blockers],
+            },
+        )
 
     validation_dict = None
     exit_code = EXIT_OK.code

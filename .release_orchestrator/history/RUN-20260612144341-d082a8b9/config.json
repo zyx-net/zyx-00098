@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "check",
+    "func": "<function _run at 0x0000020C7968B740>",
+    "environment": "production",
+    "services": null,
+    "window_start": null,
+    "window_end": null
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612144341-d082a8b9"
+}

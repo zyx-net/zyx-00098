@@ -1,0 +1,14 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "import",
+    "func": "<function _run at 0x0000020F84E0B740>",
+    "file": "reviewer_export_test.json",
+    "overwrite": false,
+    "by": null
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612144406-7cdf19a9"
+}

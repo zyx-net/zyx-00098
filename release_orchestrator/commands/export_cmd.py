@@ -22,8 +22,11 @@ from ..utils.logger import get_logger
 from ..utils.policy_loader import PolicyValidationError, evaluate_policy, load_policy
 from ..utils.storage import (
     export_full_manifest_archive,
+    export_all_locks,
     get_snapshot,
+    list_locks,
     load_manifest,
+    now_iso,
 )
 
 LOG = get_logger()
@@ -209,6 +212,16 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
     if schedule_summary:
         extra["schedule_summary.md"] = schedule_summary
 
+    base_dir = getattr(args, "work_dir", None)
+    active_locks = list_locks(base=base_dir, include_expired=False)
+    if active_locks:
+        locks_data = {
+            "exported_at": now_iso(),
+            "count": len(active_locks),
+            "locks": [l.to_dict() for l in active_locks],
+        }
+        extra["release_locks.json"] = locks_data
+
     compare_report = None
     if args.compare_with:
         from ..core.models import ExecutionSnapshot
@@ -286,6 +299,8 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
     print(f"Policy        : {policy.policy_version}")
     print(f"  Env rules   : {', '.join(policy.list_known_environments())}")
     print(f"  Dry-run blocks export: {dry_run_blocks_export}")
+    if active_locks:
+        print(f"Locks         : {len(active_locks)} active lock(s) included")
     print(f"Archive       : {archive_path}")
     print(f"Format        : {args.format}")
     print(f"Included files:")

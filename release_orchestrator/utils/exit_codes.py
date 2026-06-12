@@ -92,6 +92,30 @@ EXIT_SCHEME_IO_ERROR = ExitCode(
     24, "EXIT_SCHEME_IO_ERROR",
     "Failed to read or write scheme files to disk."
 )
+EXIT_LOCK_ALREADY_EXISTS = ExitCode(
+    30, "EXIT_LOCK_ALREADY_EXISTS",
+    "A lock with the same scope already exists. Use --force to overwrite."
+)
+EXIT_LOCK_NOT_FOUND = ExitCode(
+    31, "EXIT_LOCK_NOT_FOUND",
+    "The specified lock does not exist."
+)
+EXIT_LOCK_VALIDATION_FAILED = ExitCode(
+    32, "EXIT_LOCK_VALIDATION_FAILED",
+    "Lock validation failed: invalid environment, overlapping times, expired lock, or bad scope."
+)
+EXIT_LOCK_IO_ERROR = ExitCode(
+    33, "EXIT_LOCK_IO_ERROR",
+    "Failed to read or write lock files to disk."
+)
+EXIT_LOCK_PERMISSION_DENIED = ExitCode(
+    34, "EXIT_LOCK_PERMISSION_DENIED",
+    "Insufficient permissions to remove or overwrite the lock."
+)
+EXIT_LOCK_BLOCKED_OPERATION = ExitCode(
+    35, "EXIT_LOCK_BLOCKED_OPERATION",
+    "Operation blocked: the target environment, service, or time window is covered by an active lock."
+)
 EXIT_INTERNAL_ERROR = ExitCode(
     99, "EXIT_INTERNAL_ERROR",
     "Unexpected internal error occurred during execution."
@@ -119,6 +143,12 @@ ALL_EXIT_CODES = [
     EXIT_SCHEME_NOT_FOUND,
     EXIT_SCHEME_VALIDATION_FAILED,
     EXIT_SCHEME_IO_ERROR,
+    EXIT_LOCK_ALREADY_EXISTS,
+    EXIT_LOCK_NOT_FOUND,
+    EXIT_LOCK_VALIDATION_FAILED,
+    EXIT_LOCK_IO_ERROR,
+    EXIT_LOCK_PERMISSION_DENIED,
+    EXIT_LOCK_BLOCKED_OPERATION,
     EXIT_INTERNAL_ERROR,
 ]
 

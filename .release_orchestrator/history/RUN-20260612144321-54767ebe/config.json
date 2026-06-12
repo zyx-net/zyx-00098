@@ -1,0 +1,23 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "add",
+    "func": "<function _run at 0x000002C30AF1B740>",
+    "scope": "service",
+    "environment": "staging",
+    "service": "auth-service",
+    "window_start": null,
+    "window_end": null,
+    "window_id": null,
+    "reason": "Auth service migration in progress",
+    "by": "reviewer@test.com",
+    "expires": null,
+    "overwrite": false,
+    "as_role": "SRE_ADMIN",
+    "lock_id": null
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612144321-54767ebe"
+}

@@ -1,0 +1,23 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "lock",
+    "lock_action": "add",
+    "func": "<function _run at 0x000001CA66D0B740>",
+    "scope": "window",
+    "environment": null,
+    "service": null,
+    "window_start": "2026-07-01T00:00:00Z",
+    "window_end": "2026-07-07T00:00:00Z",
+    "window_id": null,
+    "reason": "July release freeze",
+    "by": "reviewer@test.com",
+    "expires": null,
+    "overwrite": false,
+    "as_role": "SRE_ADMIN",
+    "lock_id": null
+  },
+  "command": "lock",
+  "run_id": "RUN-20260612144355-332309f7"
+}
