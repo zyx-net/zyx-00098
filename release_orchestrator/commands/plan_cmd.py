@@ -192,7 +192,8 @@ def _print_plan(plan) -> None:
     if plan.blocked_components:
         print(f"\nBlocked Components Summary:")
         for b in plan.blocked_components:
-            print(f"  - {b['component']} v{b['version']}: {', '.join(b['blockers'])}")
+            version = b.get("version", "?")
+            print(f"  - {b['component']} v{version}: {', '.join(b['blockers'])}")
 
 
 def _print_schedule_summary(schedule_result) -> None:

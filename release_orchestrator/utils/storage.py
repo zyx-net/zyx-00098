@@ -895,9 +895,12 @@ def check_locks_for_operation(
                 if lock.covers_service(svc, environment):
                     blocks = True
                     break
-        elif lock.scope.value == "window" and window_start and window_end:
-            blocks = lock.overlaps_window(window_start, window_end)
-            if not blocks and environment:
+        elif lock.scope.value == "window":
+            if window_start and window_end:
+                blocks = lock.overlaps_window(window_start, window_end)
+                if not blocks and environment:
+                    blocks = lock.covers_environment(environment)
+            elif environment:
                 blocks = lock.covers_environment(environment)
         if blocks:
             blockers.append(lock)

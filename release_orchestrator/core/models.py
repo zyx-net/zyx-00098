@@ -892,17 +892,23 @@ class ReleaseLock:
                 at = at_time.astimezone(exp.tzinfo)
         return at >= exp
 
-    def covers_environment(self, env: str) -> bool:
+    def covers_environment(self, env: Optional[str]) -> bool:
         """Return True if this lock covers the given environment."""
         if self.is_expired():
             return False
         if self.scope == LockScope.GLOBAL:
             return True
-        if self.scope == LockScope.ENVIRONMENT:
+        if self.scope in (LockScope.ENVIRONMENT, LockScope.WINDOW):
+            if self.environment is None:
+                return True
+            if env is None:
+                return False
             return (self.environment or "").lower() == (env or "").lower()
         if self.scope == LockScope.SERVICE:
             if self.environment is None:
                 return True
+            if env is None:
+                return False
             return (self.environment or "").lower() == (env or "").lower()
         return False
 

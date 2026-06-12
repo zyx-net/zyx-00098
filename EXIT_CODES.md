@@ -26,6 +26,12 @@ This document describes every numeric exit code produced by the
 | **22** | `EXIT_SCHEME_NOT_FOUND` | The specified scheme name does not exist. |
 | **23** | `EXIT_SCHEME_VALIDATION_FAILED` | Scheme validation failed: missing fields, bad JSON, window conflicts, or locked window reuse. |
 | **24** | `EXIT_SCHEME_IO_ERROR` | Failed to read or write scheme files to disk. |
+| **30** | `EXIT_LOCK_ALREADY_EXISTS` | A release lock with the same scope/parameters already exists. Use --force to overwrite. |
+| **31** | `EXIT_LOCK_NOT_FOUND` | The specified release lock ID does not exist. |
+| **32** | `EXIT_LOCK_VALIDATION_FAILED` | Lock validation failed: invalid environment name, malformed window times, missing required fields, or time window overlaps. |
+| **33** | `EXIT_LOCK_IO_ERROR` | Failed to read or write lock files to disk. |
+| **34** | `EXIT_LOCK_PERMISSION_DENIED` | The current role does not have permission to create, remove, or overwrite this lock. |
+| **35** | `EXIT_LOCK_BLOCKED_OPERATION` | The requested operation (plan, schedule, or rollback) is blocked by one or more active release locks. |
 | **99** | `EXIT_INTERNAL_ERROR` | Unexpected internal error occurred during execution. |
 
 ## Priority / Precedence
@@ -64,6 +70,11 @@ case $ec in
   22) echo "Scheme not found" ;;
   23) echo "Scheme validation failed - check inputs" ;;
   24) echo "Scheme I/O error" ;;
+  30) echo "Lock already exists - use --force to overwrite" ;;
+  31) echo "Lock not found" ;;
+  32) echo "Lock validation failed - check environment/window parameters" ;;
+  34) echo "Permission denied - insufficient role to modify this lock" ;;
+  35) echo "Operation blocked by active release lock(s)" ;;
   *) echo "Generic failure: exit=$ec" ;;
 esac
 ```

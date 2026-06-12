@@ -407,5 +407,195 @@ class TestLockExitCodes(unittest.TestCase):
         self.assertEqual(EXIT_OK.code, 0)
 
 
+class TestWindowLockBlocking(unittest.TestCase):
+    """Regression tests: window locks block plan/rollback/schedule consistently."""
+
+    WINDOW_START = "2026-06-15T08:00:00Z"
+    WINDOW_END = "2026-06-15T10:00:00Z"
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.mkdtemp(prefix="orchestrator_window_lock_test_")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_window_lock_blocks_plan_without_explicit_window(self) -> None:
+        lock = ReleaseLock(
+            lock_id="",
+            scope=LockScope.WINDOW,
+            environment="production",
+            window_start=self.WINDOW_START,
+            window_end=self.WINDOW_END,
+            reason="DB maintenance window",
+            created_by="sre@corp.com",
+        )
+        save_lock(lock, base=self.tmp)
+
+        blockers = check_locks_for_operation(
+            base=self.tmp,
+            environment="production",
+            service_names=["auth-service", "order-service"],
+        )
+        self.assertEqual(len(blockers), 1)
+        self.assertEqual(blockers[0].scope.value, "window")
+        self.assertEqual(blockers[0].reason, "DB maintenance window")
+
+    def test_window_lock_blocks_schedule_with_overlapping_window(self) -> None:
+        lock = ReleaseLock(
+            lock_id="",
+            scope=LockScope.WINDOW,
+            environment="production",
+            window_start=self.WINDOW_START,
+            window_end=self.WINDOW_END,
+            reason="DB maintenance window",
+            created_by="sre@corp.com",
+        )
+        save_lock(lock, base=self.tmp)
+
+        blockers = check_locks_for_operation(
+            base=self.tmp,
+            environment="production",
+            service_names=["auth-service"],
+            window_start="2026-06-15T09:00:00Z",
+            window_end="2026-06-15T11:00:00Z",
+        )
+        self.assertEqual(len(blockers), 1)
+        self.assertEqual(blockers[0].scope.value, "window")
+
+    def test_window_lock_blocks_rollback_without_explicit_window(self) -> None:
+        lock = ReleaseLock(
+            lock_id="",
+            scope=LockScope.WINDOW,
+            environment="production",
+            window_start=self.WINDOW_START,
+            window_end=self.WINDOW_END,
+            reason="DB maintenance window",
+            created_by="sre@corp.com",
+        )
+        save_lock(lock, base=self.tmp)
+
+        blockers = check_locks_for_operation(
+            base=self.tmp,
+            environment="production",
+            service_names=["legacy-reporting"],
+        )
+        self.assertEqual(len(blockers), 1)
+        self.assertEqual(blockers[0].lock_id, lock.lock_id)
+
+    def test_window_lock_does_not_block_different_environment(self) -> None:
+        lock = ReleaseLock(
+            lock_id="",
+            scope=LockScope.WINDOW,
+            environment="production",
+            window_start=self.WINDOW_START,
+            window_end=self.WINDOW_END,
+            reason="DB maintenance window",
+            created_by="sre@corp.com",
+        )
+        save_lock(lock, base=self.tmp)
+
+        blockers = check_locks_for_operation(
+            base=self.tmp,
+            environment="staging",
+            service_names=["auth-service"],
+        )
+        self.assertEqual(len(blockers), 0)
+
+    def test_window_lock_without_environment_blocks_all_envs(self) -> None:
+        lock = ReleaseLock(
+            lock_id="",
+            scope=LockScope.WINDOW,
+            environment=None,
+            window_start=self.WINDOW_START,
+            window_end=self.WINDOW_END,
+            reason="Global freeze",
+            created_by="sre@corp.com",
+        )
+        save_lock(lock, base=self.tmp)
+
+        for env in ["production", "staging", "dev"]:
+            blockers = check_locks_for_operation(
+                base=self.tmp,
+                environment=env,
+                service_names=["auth-service"],
+            )
+            self.assertEqual(len(blockers), 1, f"Should block env={env}")
+            self.assertEqual(blockers[0].reason, "Global freeze")
+
+    def test_no_locks_all_operations_succeed(self) -> None:
+        blockers_plan = check_locks_for_operation(
+            base=self.tmp,
+            environment="production",
+            service_names=["auth-service"],
+        )
+        self.assertEqual(len(blockers_plan), 0)
+
+        blockers_schedule = check_locks_for_operation(
+            base=self.tmp,
+            environment="production",
+            service_names=["auth-service"],
+            window_start=self.WINDOW_START,
+            window_end=self.WINDOW_END,
+        )
+        self.assertEqual(len(blockers_schedule), 0)
+
+        blockers_rollback = check_locks_for_operation(
+            base=self.tmp,
+            environment="production",
+            service_names=["auth-service"],
+        )
+        self.assertEqual(len(blockers_rollback), 0)
+
+    def test_expired_window_lock_does_not_block(self) -> None:
+        lock = ReleaseLock(
+            lock_id="",
+            scope=LockScope.WINDOW,
+            environment="production",
+            window_start=self.WINDOW_START,
+            window_end=self.WINDOW_END,
+            reason="Past maintenance",
+            created_by="sre@corp.com",
+            expires_at=_make_past(days=1),
+        )
+        save_lock(lock, base=self.tmp)
+
+        blockers = check_locks_for_operation(
+            base=self.tmp,
+            environment="production",
+            service_names=["auth-service"],
+        )
+        self.assertEqual(len(blockers), 0)
+
+    def test_print_plan_handles_missing_version_in_blocked_components(self) -> None:
+        from release_orchestrator.commands.plan_cmd import _print_plan
+        from release_orchestrator.core.models import ReleasePlan, EnvironmentType
+
+        plan = ReleasePlan(
+            plan_id="PLAN-TEST",
+            release_id="REL-TEST",
+            target_environment=EnvironmentType.PRODUCTION,
+            generated_at="2026-06-15T00:00:00Z",
+            total_estimated_minutes=0,
+            steps=[],
+            execution_order=[],
+            blocked_components=[
+                {"component": "auth-service", "blockers": ["version downgrade"]},
+                {"component": "order-service", "version": "3.1.0", "blockers": ["approval missing"]},
+            ],
+        )
+        import io
+        import sys
+        captured = io.StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = captured
+        try:
+            _print_plan(plan)
+        finally:
+            sys.stdout = old_stdout
+        output = captured.getvalue()
+        self.assertIn("auth-service v?", output)
+        self.assertIn("order-service v3.1.0", output)
+
+
 if __name__ == "__main__":
     unittest.main()
