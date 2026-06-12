@@ -1,0 +1,16 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "reviewer_inputs/manifest_b.json",
+    "output": "archives/reviewer_b",
+    "format": "zip",
+    "no_dryrun": false,
+    "seed": null,
+    "compare_with": "RUN-20260612042945-eaea3a34",
+    "func": "<function _run at 0x000001B1483AE1F0>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612042956-2967005d"
+}

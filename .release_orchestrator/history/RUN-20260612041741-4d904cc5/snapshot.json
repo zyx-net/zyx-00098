@@ -1,0 +1,51 @@
+{
+  "run_id": "RUN-20260612041741-4d904cc5",
+  "command": "history",
+  "started_at": "2026-06-12T04:17:41Z",
+  "finished_at": "2026-06-12T04:17:41Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": null,
+      "limit": 20,
+      "show": null,
+      "show_logs": false,
+      "as_json": true,
+      "compare": "compare",
+      "run_a": "RUN-20260612034521-d9c74a51",
+      "run_b": "RUN-20260612034521-564d7fd8",
+      "func": "<function _run at 0x0000019C7F6CE560>"
+    },
+    "command": "history",
+    "run_id": "RUN-20260612041741-4d904cc5"
+  },
+  "manifest_snapshot": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T04:17:41Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[history] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612041741-4d904cc5"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T04:17:41Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[history] Finished",
+      "extra": {
+        "run_id": "RUN-20260612041741-4d904cc5",
+        "exit_code": 0
+      }
+    }
+  ],
+  "archive_path": null
+}

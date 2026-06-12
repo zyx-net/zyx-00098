@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 from typing import Any
 
 from .base import CommandResult
+from ..core.compare import compare_snapshots, format_report_text
 from ..utils.exit_codes import EXIT_HISTORY_ERROR, EXIT_OK, get_exit_code_by_code
 from ..utils.logger import get_logger
 from ..utils.storage import (
@@ -30,10 +32,22 @@ def add_parser(subparsers: "argparse._SubParsersAction") -> None:
                    help="When used with --show, print the run's log text")
     p.add_argument("--command", default=None,
                    help="Filter by command name (init/validate/plan/...)")
+    p.add_argument("--json", action="store_true", dest="as_json",
+                   help="Output as JSON instead of human-readable text")
+    p.add_argument("compare", nargs="?", default=None, metavar="compare",
+                   help=argparse.SUPPRESS)
+    p.add_argument("run_a", nargs="?", default=None, metavar="run_a",
+                   help=argparse.SUPPRESS)
+    p.add_argument("run_b", nargs="?", default=None, metavar="run_b",
+                   help=argparse.SUPPRESS)
     p.set_defaults(func=_run)
 
 
 def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
+    if args.compare == "compare" and args.run_a and args.run_b:
+        return _compare_runs(args, args.run_a, args.run_b)
+    if args.compare and not args.run_a:
+        args.compare = None
     if args.show:
         return _show_run(args)
     return _list_runs(args)
@@ -47,6 +61,10 @@ def _list_runs(args: argparse.Namespace) -> CommandResult:
 
     if not history:
         print("No execution history found. Run some commands first.")
+        return CommandResult(exit_code=EXIT_OK.code, run_id="")
+
+    if args.as_json:
+        print(json.dumps(history, indent=2, ensure_ascii=False, default=str))
         return CommandResult(exit_code=EXIT_OK.code, run_id="")
 
     print(f"\n=== Execution History (last {len(history)}) ===")
@@ -64,6 +82,7 @@ def _list_runs(args: argparse.Namespace) -> CommandResult:
             f"{h.get('finished_at', '?'):20s}"
         )
     print(f"\nTip: use --show <RUN_ID> to inspect a specific run.")
+    print(f"Tip: use history compare <run_a> <run_b> to compare two runs.")
     return CommandResult(exit_code=EXIT_OK.code, run_id="")
 
 
@@ -76,6 +95,10 @@ def _show_run(args: argparse.Namespace) -> CommandResult:
 
     sd = snap.to_dict()
     ec = get_exit_code_by_code(int(snap.exit_code))
+
+    if args.as_json:
+        print(json.dumps(sd, indent=2, ensure_ascii=False, default=str))
+        return CommandResult(exit_code=EXIT_OK.code, run_id="")
 
     print(f"\n=== Execution Details: {snap.run_id} ===")
     print(f"Command     : {snap.command}")
@@ -123,5 +146,27 @@ def _show_run(args: argparse.Namespace) -> CommandResult:
                 print(f"[{entry.get('timestamp')}] [{entry.get('level'):7s}] [{entry.get('module')}] {entry.get('message')}{extra}")
         else:
             print("\n(No log entries stored in snapshot)")
+
+    return CommandResult(exit_code=EXIT_OK.code, run_id="")
+
+
+def _compare_runs(args: argparse.Namespace, run_a: str, run_b: str) -> CommandResult:
+    snap_a = get_snapshot(run_a)
+    snap_b = get_snapshot(run_b)
+
+    if not snap_a:
+        print(f"Run ID not found: {run_a}")
+        return CommandResult(exit_code=EXIT_HISTORY_ERROR.code, run_id="")
+    if not snap_b:
+        print(f"Run ID not found: {run_b}")
+        return CommandResult(exit_code=EXIT_HISTORY_ERROR.code, run_id="")
+
+    base = getattr(args, "work_dir", None)
+    report = compare_snapshots(snap_a, snap_b, base=base)
+
+    if args.as_json:
+        print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False, default=str))
+    else:
+        print(format_report_text(report))
 
     return CommandResult(exit_code=EXIT_OK.code, run_id="")

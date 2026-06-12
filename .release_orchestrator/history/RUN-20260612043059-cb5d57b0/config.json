@@ -1,0 +1,17 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": null,
+    "limit": 20,
+    "show": null,
+    "show_logs": false,
+    "as_json": true,
+    "compare": "compare",
+    "run_a": "REVIEW-LONGLOG-A",
+    "run_b": "RUN-20260612042956-2967005d",
+    "func": "<function _run at 0x000002A7CCA7E4B0>"
+  },
+  "command": "history",
+  "run_id": "RUN-20260612043059-cb5d57b0"
+}

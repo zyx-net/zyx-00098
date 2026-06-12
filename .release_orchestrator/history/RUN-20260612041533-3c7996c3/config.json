@@ -1,0 +1,16 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+    "output": "D:\\workSpace\\AI__SPACE\\zyx-00098\\archives\\regression_compare_export",
+    "format": "zip",
+    "no_dryrun": false,
+    "seed": null,
+    "compare_with": "RUN-20260612012229-d6bf0b63",
+    "func": "<function _run at 0x000001F5C5BCE2A0>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612041533-3c7996c3"
+}

@@ -5,6 +5,7 @@ import argparse
 from typing import Any
 
 from .base import CommandResult
+from ..core.compare import compare_snapshots
 from ..core.dryrun import DryRunExecutor
 from ..core.planner import ReleasePlanner
 from ..core.rollback import RollbackPlanner
@@ -13,11 +14,13 @@ from ..utils.exit_codes import (
     EXIT_CONFIG_ERROR,
     EXIT_EXPORT_ERROR,
     EXIT_FILE_NOT_FOUND,
+    EXIT_HISTORY_ERROR,
     EXIT_OK,
 )
 from ..utils.logger import get_logger
 from ..utils.storage import (
     export_full_manifest_archive,
+    get_snapshot,
     load_manifest,
 )
 
@@ -37,6 +40,8 @@ def add_parser(subparsers: "argparse._SubParsersAction") -> None:
                    help="Skip dry-run execution before export")
     p.add_argument("--seed", type=int, default=None,
                    help="Random seed for dry-run simulation")
+    p.add_argument("--compare-with", default=None, metavar="RUN_ID",
+                   help="Include a compare_report.json comparing against the given historical run")
     p.set_defaults(func=_run)
 
 
@@ -88,6 +93,48 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
     if dry_run_result:
         extra["dry_run_result.json"] = dry_run_result
 
+    compare_report = None
+    if args.compare_with:
+        from ..core.models import ExecutionSnapshot
+        base = getattr(args, "work_dir", None)
+        ref_snap = get_snapshot(args.compare_with, base=base)
+        if not ref_snap:
+            LOG.error(MODULE, f"Compare reference run not found: {args.compare_with}")
+            print(f"Error: reference run_id not found: {args.compare_with}")
+            return CommandResult(
+                exit_code=EXIT_HISTORY_ERROR.code,
+                run_id="",
+                manifest_snapshot=manifest.to_dict(),
+                validation_result=validation_dict,
+                release_plan=plan_dict,
+                rollback_plan=rollback_dict,
+                dry_run_result=dry_run_result,
+            )
+
+        current_snap = ExecutionSnapshot(
+            run_id=run_id,
+            command="export",
+            started_at="",
+            finished_at="",
+            exit_code=0,
+            config_snapshot=config_dict,
+            manifest_snapshot=manifest.to_dict(),
+            validation_result=validation_dict,
+            release_plan=plan_dict,
+            rollback_plan=rollback_dict,
+            dry_run_result=dry_run_result,
+            logs=[],
+        )
+
+        # 注意：这里以 ref_snap 为 A，current_snap 为 B
+        # 这样报告里 A 是历史参考，B 是本次导出
+        report = compare_snapshots(ref_snap, current_snap, base=base)
+        compare_report = report.to_dict()
+        # 记录来源 run_id
+        compare_report["source_run_a"] = args.compare_with
+        compare_report["source_run_b"] = run_id
+        extra["compare_report.json"] = compare_report
+
     exit_code = EXIT_OK.code
     try:
         archive_path = export_full_manifest_archive(
@@ -116,6 +163,13 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
     print(f"Included files:")
     for name in ["manifest.json"] + list(extra.keys()):
         print(f"  - {name}")
+    if compare_report:
+        print(f"\nCompare report included:")
+        print(f"  Reference run: {args.compare_with}")
+        print(f"  Current run  : {run_id}")
+        warns = compare_report.get("warnings", [])
+        if warns:
+            print(f"  Warnings     : {len(warns)}")
 
     return CommandResult(
         exit_code=exit_code,
@@ -125,5 +179,8 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
         release_plan=plan_dict,
         rollback_plan=rollback_dict,
         dry_run_result=dry_run_result,
-        extra_artifacts={"archive_path": str(archive_path)},
+        extra_artifacts={
+            "archive_path": str(archive_path),
+            "compare_report": compare_report,
+        } if compare_report else {"archive_path": str(archive_path)},
     )

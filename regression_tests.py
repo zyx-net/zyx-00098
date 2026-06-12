@@ -328,6 +328,424 @@ if export_history_dir:
     )
 
 # ---------------------------------------------------------------------------
+# Section 7: history compare - JSON output
+# ---------------------------------------------------------------------------
+print()
+print("Section 7: history compare -- JSON output")
+print("-" * 60)
+
+from release_orchestrator.core.compare import (
+    compare_snapshots,
+    format_report_text,
+    FieldDiff,
+    ComponentDiff,
+    CompareReport,
+)
+from release_orchestrator.core.models import ExecutionSnapshot
+from release_orchestrator.utils.storage import get_snapshot, list_history
+
+all_runs = list_history()
+if len(all_runs) >= 2:
+    run_a_id = all_runs[0]["run_id"]
+    run_b_id = all_runs[1]["run_id"]
+    snap_a = get_snapshot(run_a_id)
+    snap_b = get_snapshot(run_b_id)
+
+    check("can load two snapshots for compare testing",
+          snap_a is not None and snap_b is not None,
+          f"snap_a={snap_a is not None} snap_b={snap_b is not None}")
+
+    if snap_a and snap_b:
+        report = compare_snapshots(snap_a, snap_b)
+        check("compare_snapshots returns CompareReport",
+              isinstance(report, CompareReport),
+              f"type={type(report).__name__}")
+
+        report_dict = report.to_dict()
+        check("CompareReport.to_dict() is JSON-serializable",
+              isinstance(json.dumps(report_dict), str),
+              f"keys={sorted(report_dict.keys())[:10]}")
+
+        required_keys = {"run_a", "run_b", "generated_at", "overview",
+                         "config_diffs", "manifest_diffs", "component_diffs",
+                         "validation_diffs", "release_plan_diffs",
+                         "rollback_plan_diffs", "dry_run_diffs",
+                         "log_diffs", "warnings"}
+        missing_keys = required_keys - set(report_dict.keys())
+        check("compare report has all required top-level keys",
+              not missing_keys,
+              f"missing={sorted(missing_keys)}")
+
+        check("compare report run_a matches input",
+              report_dict["run_a"] == run_a_id,
+              f"run_a={report_dict['run_a']}")
+        check("compare report run_b matches input",
+              report_dict["run_b"] == run_b_id,
+              f"run_b={report_dict['run_b']}")
+
+        text_report = format_report_text(report)
+        check("format_report_text produces non-empty output",
+              len(text_report) > 200,
+              f"length={len(text_report)}")
+        check("text report contains both run IDs",
+              run_a_id in text_report and run_b_id in text_report,
+              f"has_a={run_a_id in text_report} has_b={run_b_id in text_report}")
+        check("text report contains section headers",
+              "Config Differences" in text_report
+              and "Validation Differences" in text_report,
+              f"has_config={'Config Differences' in text_report} has_val={'Validation Differences' in text_report}")
+
+        log_diffs = report_dict.get("log_diffs", {})
+        check("log diffs include summary counts",
+              "diff_summary" in log_diffs and "lines_a_total" in log_diffs,
+              f"keys={sorted(log_diffs.keys())}")
+
+
+# ---------------------------------------------------------------------------
+# Section 8: history compare - CLI (JSON output + error handling)
+# ---------------------------------------------------------------------------
+print()
+print("Section 8: history compare CLI tests")
+print("-" * 60)
+
+if len(all_runs) >= 2:
+    proc = subprocess.run(
+        [sys.executable, "-m", "release_orchestrator",
+         "history", "compare", run_a_id, run_b_id, "--json"],
+        cwd=str(ROOT), capture_output=True, text=True,
+    )
+    check("history compare --json exits 0",
+          proc.returncode == 0,
+          f"exit_code={proc.returncode}")
+
+    try:
+        # 在 stdout 中找到所有完整的 JSON 对象，取最大的那个（compare report）
+        text = proc.stdout
+        candidates = []
+        i = 0
+        while i < len(text):
+            if text[i] == "{":
+                depth = 0
+                start = i
+                for j in range(i, len(text)):
+                    if text[j] == "{":
+                        depth += 1
+                    elif text[j] == "}":
+                        depth -= 1
+                        if depth == 0:
+                            candidates.append(text[start:j+1])
+                            i = j + 1
+                            break
+                else:
+                    i += 1
+            else:
+                i += 1
+
+        # 找包含 "overview" 或 "run_a" + "run_b" + "config_diffs" 的那个
+        cli_report = None
+        for cand in candidates:
+            try:
+                obj = json.loads(cand)
+                if isinstance(obj, dict) and "config_diffs" in obj and "run_a" in obj and "run_b" in obj:
+                    cli_report = obj
+                    break
+            except Exception:
+                continue
+
+        if cli_report:
+            check("CLI compare JSON output is valid", True)
+            check("CLI compare JSON has run_a and run_b",
+                  cli_report.get("run_a") == run_a_id
+                  and cli_report.get("run_b") == run_b_id,
+                  f"run_a={cli_report.get('run_a')} run_b={cli_report.get('run_b')}")
+        else:
+            check("CLI compare JSON output is valid", False,
+                  f"no compare report JSON found, candidates={len(candidates)}")
+    except Exception as e:
+        check("CLI compare JSON output is valid", False, f"error={e}")
+
+# Test nonexistent run ID
+proc_bad = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator",
+     "history", "compare", "NO_SUCH_RUN_12345", run_b_id if len(all_runs) >= 2 else "NO_SUCH_TWO"],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("history compare with nonexistent run_id returns EXIT_HISTORY_ERROR (15)",
+      proc_bad.returncode == 15,
+      f"exit_code={proc_bad.returncode}")
+check("history compare error message mentions run not found",
+      "not found" in proc_bad.stdout.lower() or "not found" in proc_bad.stderr.lower(),
+      f"stdout_preview={proc_bad.stdout[:100]!r}")
+
+
+# ---------------------------------------------------------------------------
+# Section 9: export with compare - zip content + source run IDs
+# ---------------------------------------------------------------------------
+print()
+print("Section 9: export --compare-with produces compare_report.json")
+print("-" * 60)
+
+if len(all_runs) >= 1:
+    ref_run = all_runs[-1]["run_id"]
+    compare_export_out = ROOT / "archives" / "regression_compare_export"
+    if compare_export_out.with_suffix(".zip").exists():
+        compare_export_out.with_suffix(".zip").unlink()
+
+    proc_comp = subprocess.run(
+        [sys.executable, "-m", "release_orchestrator", "export",
+         "-m", str(manifest),
+         "-o", str(compare_export_out),
+         "--compare-with", ref_run,
+         "--format", "zip"],
+        cwd=str(ROOT), capture_output=True, text=True,
+    )
+    check("export --compare-with exits 0",
+          proc_comp.returncode == 0,
+          f"exit_code={proc_comp.returncode} stderr={proc_comp.stderr[:100]}")
+
+    zip_path = compare_export_out.with_suffix(".zip")
+    check(f"compare export zip exists", zip_path.exists(), f"exists={zip_path.exists()}")
+
+    if zip_path.exists():
+        with zipfile.ZipFile(zip_path) as zf:
+            names = set(zf.namelist())
+            check("compare export zip contains compare_report.json",
+                  "compare_report.json" in names,
+                  f"names={sorted(names)}")
+
+            if "compare_report.json" in names:
+                with zf.open("compare_report.json") as f:
+                    creport = json.load(f)
+                check("compare_report.json has source_run_a and source_run_b",
+                      "source_run_a" in creport and "source_run_b" in creport,
+                      f"keys={sorted(creport.keys())[:15]}")
+                check("compare_report.json source_run_a matches reference",
+                      creport.get("source_run_a") == ref_run,
+                      f"source_run_a={creport.get('source_run_a')} ref={ref_run}")
+                check("compare_report.json has all expected diff sections",
+                      all(k in creport for k in [
+                          "config_diffs", "manifest_diffs", "validation_diffs",
+                          "release_plan_diffs", "rollback_plan_diffs",
+                          "dry_run_diffs", "log_diffs", "component_diffs",
+                      ]),
+                      f"missing={[k for k in ['config_diffs','manifest_diffs','validation_diffs'] if k not in creport]}")
+
+
+# ---------------------------------------------------------------------------
+# Section 10: compare with old/partial history (missing fields)
+# ---------------------------------------------------------------------------
+print()
+print("Section 10: compare handles partial/old history (missing fields)")
+print("-" * 60)
+
+minimal_snap_a = ExecutionSnapshot(
+    run_id="MINIMAL-A",
+    command="init",
+    started_at="2020-01-01T00:00:00Z",
+    finished_at="2020-01-01T00:00:01Z",
+    exit_code=0,
+    config_snapshot=None,
+    manifest_snapshot=None,
+    validation_result=None,
+    release_plan=None,
+    rollback_plan=None,
+    dry_run_result=None,
+    logs=[],
+)
+full_snap_b = ExecutionSnapshot(
+    run_id="FULL-B",
+    command="export",
+    started_at="2020-01-02T00:00:00Z",
+    finished_at="2020-01-02T00:00:05Z",
+    exit_code=0,
+    config_snapshot={"command": "export", "args": {"manifest": "x.json"}},
+    manifest_snapshot={
+        "release_id": "REL-TEST",
+        "components": [
+            {"name": "comp1", "version": "1.0.0", "environment": "prod",
+             "artifact": {"path": "a.pkg", "checksum": "abc"}},
+        ],
+    },
+    validation_result={
+        "timestamp": "2020-01-02T00:00:01Z",
+        "passed": True,
+        "issues": [],
+        "summary": {"total": 0, "errors": 0, "warnings": 0, "infos": 0},
+    },
+    release_plan={
+        "plan_id": "PLAN-1", "release_id": "REL-TEST", "generated_at": "x",
+        "target_environment": "prod",
+        "execution_order": ["comp1"],
+        "steps": [{"step_index": 0, "component_name": "comp1",
+                   "component_version": "1.0.0", "action": "deploy",
+                   "status": "scheduled"}],
+        "blocked_components": [],
+        "total_estimated_minutes": 5,
+    },
+    rollback_plan={
+        "plan_id": "RBP-1", "release_id": "REL-TEST", "generated_at": "x",
+        "target_environment": "prod",
+        "execution_order": ["comp1"],
+        "steps": [{"step_index": 0, "component_name": "comp1",
+                   "component_version": "0.9.0", "action": "rollback",
+                   "status": "scheduled"}],
+        "blocked_components": [],
+        "total_estimated_minutes": 3,
+    },
+    dry_run_result={
+        "summary": {"total_steps": 1, "successful": 1, "failed": 0,
+                    "blocked": 0, "skipped": 0, "exit_code": 0},
+        "steps": [],
+    },
+    logs=[],
+)
+
+partial_report = compare_snapshots(minimal_snap_a, full_snap_b)
+partial_dict = partial_report.to_dict()
+
+check("partial compare generates warnings for missing fields",
+      len(partial_dict.get("warnings", [])) >= 3,
+      f"warnings={partial_dict.get('warnings')}")
+
+check("partial compare: manifest.present is only_in_b",
+      any(d.get("field") == "manifest.present" and d.get("status") == "only_in_b"
+          for d in partial_dict.get("manifest_diffs", [])),
+      f"manifest_diffs={[d['field'] for d in partial_dict.get('manifest_diffs', [])]}")
+
+check("partial compare: validation.present is only_in_b",
+      any(d.get("field") == "validation.present" and d.get("status") == "only_in_b"
+          for d in partial_dict.get("validation_diffs", [])),
+      f"validation_diffs_fields={[d['field'] for d in partial_dict.get('validation_diffs', [])]}")
+
+check("partial compare report is still JSON serializable",
+      isinstance(json.dumps(partial_dict), str),
+      f"serializable={isinstance(json.dumps(partial_dict), str)}")
+
+
+# ---------------------------------------------------------------------------
+# Section 11: compare with conflicting component versions
+# ---------------------------------------------------------------------------
+print()
+print("Section 11: compare detects same-name component version conflicts")
+print("-" * 60)
+
+snap_conflict_a = ExecutionSnapshot(
+    run_id="CONFLICT-A",
+    command="plan",
+    started_at="2020-01-01T00:00:00Z",
+    exit_code=0,
+    manifest_snapshot={
+        "release_id": "REL-A",
+        "components": [
+            {"name": "shared-lib", "version": "1.0.0", "environment": "prod",
+             "artifact": {"path": "a.pkg", "checksum": "abc"}},
+            {"name": "api-gateway", "version": "2.0.0", "environment": "prod",
+             "artifact": {"path": "b.pkg", "checksum": "def"}},
+            {"name": "only-in-a", "version": "1.0.0", "environment": "prod",
+             "artifact": {"path": "c.pkg", "checksum": "ghi"}},
+        ],
+    },
+)
+
+snap_conflict_b = ExecutionSnapshot(
+    run_id="CONFLICT-B",
+    command="plan",
+    started_at="2020-01-02T00:00:00Z",
+    exit_code=0,
+    manifest_snapshot={
+        "release_id": "REL-B",
+        "components": [
+            {"name": "shared-lib", "version": "1.1.0", "environment": "prod",
+             "artifact": {"path": "a.pkg", "checksum": "xyz"}},
+            {"name": "api-gateway", "version": "2.0.0", "environment": "prod",
+             "artifact": {"path": "b.pkg", "checksum": "def"}},
+            {"name": "only-in-b", "version": "3.0.0", "environment": "prod",
+             "artifact": {"path": "d.pkg", "checksum": "jkl"}},
+        ],
+    },
+)
+
+conflict_report = compare_snapshots(snap_conflict_a, snap_conflict_b)
+conflict_dict = conflict_report.to_dict()
+comp_diffs = conflict_dict.get("component_diffs", [])
+
+check("component diffs include all 4 unique component names",
+      len(comp_diffs) == 4,
+      f"components={[c['name'] for c in comp_diffs]}")
+
+shared_lib_diff = next((c for c in comp_diffs if c["name"] == "shared-lib"), None)
+check("shared-lib is flagged as version conflict",
+      shared_lib_diff is not None and shared_lib_diff.get("version_conflict") is True,
+      f"shared_lib={shared_lib_diff}")
+
+api_gw_diff = next((c for c in comp_diffs if c["name"] == "api-gateway"), None)
+check("api-gateway (same version) is NOT flagged as conflict",
+      api_gw_diff is not None and api_gw_diff.get("version_conflict") is False,
+      f"api_gw={api_gw_diff}")
+
+only_a = next((c for c in comp_diffs if c["name"] == "only-in-a"), None)
+check("only-in-a appears only in A",
+      only_a is not None and only_a.get("in_a") and not only_a.get("in_b"),
+      f"only_in_a={only_a}")
+
+only_b = next((c for c in comp_diffs if c["name"] == "only-in-b"), None)
+check("only-in-b appears only in B",
+      only_b is not None and not only_b.get("in_a") and only_b.get("in_b"),
+      f"only_in_b={only_b}")
+
+
+# ---------------------------------------------------------------------------
+# Section 12: cross-restart recompute (from history dir)
+# ---------------------------------------------------------------------------
+print()
+print("Section 12: compare can be recomputed from history dirs (cross-restart)")
+print("-" * 60)
+
+if len(all_runs) >= 2:
+    # 从历史目录重新加载两个快照并比较，确保结果与直接从 get_snapshot 一致
+    snap1 = get_snapshot(run_a_id)
+    snap2 = get_snapshot(run_b_id)
+    if snap1 and snap2:
+        r1 = compare_snapshots(snap1, snap2)
+        # 模拟重启：重新加载一次再比较
+        snap1_reload = get_snapshot(run_a_id)
+        snap2_reload = get_snapshot(run_b_id)
+        r2 = compare_snapshots(snap1_reload, snap2_reload)
+
+        # 比较关键字段（排除生成时间）
+        def _comparable_keys(d: dict) -> dict:
+            skip = {"generated_at", "logs", "finished_at", "started_at",
+                    "plan_id", "timestamp", "dry_run_id"}
+            result = {}
+            for k, v in d.items():
+                if k in skip:
+                    continue
+                if isinstance(v, dict):
+                    result[k] = _comparable_keys(v)
+                elif isinstance(v, list):
+                    result[k] = [_comparable_keys(x) if isinstance(x, dict) else x for x in v]
+                else:
+                    result[k] = v
+            return result
+
+        d1 = _comparable_keys(r1.to_dict())
+        d2 = _comparable_keys(r2.to_dict())
+        # 注意：log diffs 可能会有细微的时间戳差异，我们只比较结构
+        d1.pop("log_diffs", None)
+        d2.pop("log_diffs", None)
+
+        check("recomputed compare from history yields same results (cross-restart)",
+              d1 == d2,
+              f"same={d1 == d2}")
+
+        # 验证：日志差异也可以从 run.log 文件计算
+        log_diffs = r1.to_dict().get("log_diffs", {})
+        check("log diffs computed from history run.log files",
+              log_diffs.get("lines_a_total", 0) > 0 and log_diffs.get("lines_b_total", 0) > 0,
+              f"lines_a={log_diffs.get('lines_a_total')} lines_b={log_diffs.get('lines_b_total')}")
+
+
+# ---------------------------------------------------------------------------
 # Final summary + exit code
 # ---------------------------------------------------------------------------
 print()
