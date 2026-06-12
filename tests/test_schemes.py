@@ -29,6 +29,7 @@ from release_orchestrator.utils.exit_codes import (
     EXIT_SCHEME_VALIDATION_FAILED,
 )
 from release_orchestrator.utils.storage import (
+    clone_scheme,
     delete_scheme,
     export_scheme_to_file,
     import_scheme_from_file,
@@ -586,6 +587,245 @@ class TestSchemeOperationsLog(unittest.TestCase):
         lines = [json.loads(l) for l in log_path.read_text(encoding="utf-8").strip().split("\n") if l.strip()]
         actions = [l["action"] for l in lines]
         self.assertEqual(actions, ["save", "export", "delete", "save", "import"])
+
+
+class TestSchemeClone(unittest.TestCase):
+    """Tests for scheme cloning functionality."""
+
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.mkdtemp(prefix="orchestrator_clone_test_")
+        self.work_dir = self.temp_dir
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def test_clone_scheme_success(self) -> None:
+        import time
+
+        source = _make_test_scheme("source-scheme", created_by="alice@corp.com")
+        source.description = "Original source scheme"
+        source.policy = {"max_capacity": 10, "strict": True}
+        source_created_at = "2026-01-01T00:00:00Z"
+        source.created_at = source_created_at
+        save_scheme(source, base=self.work_dir)
+
+        time.sleep(1)
+
+        cloned = clone_scheme(
+            "source-scheme",
+            "cloned-scheme",
+            base=self.work_dir,
+            created_by="bob@corp.com",
+        )
+
+        self.assertEqual(cloned.scheme_name, "cloned-scheme")
+        self.assertEqual(cloned.created_by, "bob@corp.com")
+        self.assertNotEqual(cloned.created_at, source_created_at)
+        self.assertEqual(len(cloned.release_windows), len(source.release_windows))
+        self.assertEqual(len(cloned.waves), len(source.waves))
+        self.assertEqual(cloned.manifest["release_id"], source.manifest["release_id"])
+        self.assertEqual(cloned.tags, source.tags)
+        self.assertEqual(cloned.policy, source.policy)
+        self.assertEqual(cloned.metadata.get("cloned_from"), "source-scheme")
+        self.assertEqual(cloned.metadata.get("source"), "scheme_clone")
+        self.assertIsNone(cloned.updated_at)
+
+        loaded = load_scheme("cloned-scheme", base=self.work_dir)
+        self.assertEqual(loaded.scheme_name, "cloned-scheme")
+        self.assertEqual(loaded.metadata.get("cloned_from"), "source-scheme")
+
+    def test_clone_source_not_found(self) -> None:
+        with self.assertRaises(FileNotFoundError) as ctx:
+            clone_scheme("never-existed", "new-scheme", base=self.work_dir)
+        self.assertIn("Source scheme not found", str(ctx.exception))
+
+    def test_clone_target_already_exists_no_force(self) -> None:
+        source = _make_test_scheme("clone-source")
+        save_scheme(source, base=self.work_dir)
+        target = _make_test_scheme("clone-target")
+        save_scheme(target, base=self.work_dir)
+
+        with self.assertRaises(FileExistsError) as ctx:
+            clone_scheme("clone-source", "clone-target", base=self.work_dir)
+        self.assertIn("already exists", str(ctx.exception))
+
+    def test_clone_target_already_exists_with_force(self) -> None:
+        source = _make_test_scheme("clone-source-2")
+        source.description = "SOURCE DESCRIPTION"
+        source.policy = {"key": "value"}
+        save_scheme(source, base=self.work_dir)
+
+        target = _make_test_scheme("clone-target-2")
+        target.description = "OLD DESCRIPTION"
+        save_scheme(target, base=self.work_dir)
+
+        cloned = clone_scheme(
+            "clone-source-2",
+            "clone-target-2",
+            base=self.work_dir,
+            overwrite=True,
+            created_by="charlie@corp.com",
+        )
+
+        self.assertEqual(cloned.scheme_name, "clone-target-2")
+        self.assertEqual(cloned.description, "SOURCE DESCRIPTION")
+        self.assertEqual(cloned.created_by, "charlie@corp.com")
+        self.assertIsNotNone(cloned.updated_at)
+        self.assertEqual(cloned.policy, {"key": "value"})
+
+        loaded = load_scheme("clone-target-2", base=self.work_dir)
+        self.assertEqual(loaded.description, "SOURCE DESCRIPTION")
+
+    def test_clone_invalid_target_name(self) -> None:
+        source = _make_test_scheme("valid-source")
+        save_scheme(source, base=self.work_dir)
+
+        with self.assertRaises(ValueError) as ctx:
+            clone_scheme("valid-source", "   ", base=self.work_dir)
+        self.assertIn("cannot be empty", str(ctx.exception))
+
+    def test_clone_persists_across_process_restart(self) -> None:
+        source = _make_test_scheme("persist-source", created_by="dave@corp.com")
+        save_scheme(source, base=self.work_dir)
+        clone_scheme(
+            "persist-source",
+            "persist-clone",
+            base=self.work_dir,
+            created_by="eve@corp.com",
+        )
+
+        other_temp = tempfile.mkdtemp(prefix="orchestrator_clone_restart_")
+        try:
+            shutil.copytree(
+                Path(self.work_dir) / ".release_orchestrator",
+                Path(other_temp) / ".release_orchestrator",
+            )
+
+            self.assertTrue(scheme_exists("persist-clone", base=other_temp))
+            loaded = load_scheme("persist-clone", base=other_temp)
+            self.assertEqual(loaded.scheme_name, "persist-clone")
+            self.assertEqual(loaded.created_by, "eve@corp.com")
+            self.assertEqual(loaded.metadata.get("cloned_from"), "persist-source")
+            self.assertEqual(len(loaded.release_windows), 3)
+            self.assertEqual(len(loaded.waves), 3)
+        finally:
+            shutil.rmtree(other_temp, ignore_errors=True)
+
+    def test_clone_then_export_import_preserves_metadata(self) -> None:
+        source = _make_test_scheme("export-source")
+        save_scheme(source, base=self.work_dir)
+        clone_scheme(
+            "export-source",
+            "export-clone",
+            base=self.work_dir,
+            created_by="frank@corp.com",
+        )
+
+        export_path = Path(self.temp_dir) / "clone_export.json"
+        export_scheme_to_file("export-clone", str(export_path), base=self.work_dir)
+
+        shutil.rmtree(Path(self.work_dir) / ".release_orchestrator")
+
+        import_scheme_from_file(
+            str(export_path),
+            scheme_name="imported-clone",
+            base=self.work_dir,
+        )
+
+        loaded = load_scheme("imported-clone", base=self.work_dir)
+        self.assertEqual(loaded.scheme_name, "imported-clone")
+        self.assertEqual(loaded.created_by, "frank@corp.com")
+        self.assertEqual(loaded.metadata.get("cloned_from"), "export-source")
+        self.assertEqual(len(loaded.release_windows), 3)
+        self.assertEqual(len(loaded.waves), 3)
+        self.assertEqual(loaded.manifest["release_id"], "RL-TEST-001")
+        self.assertEqual(loaded.tags, ["test", "unit"])
+
+    def test_clone_logs_operation(self) -> None:
+        source = _make_test_scheme("log-clone-source")
+        save_scheme(source, base=self.work_dir)
+        clone_scheme(
+            "log-clone-source",
+            "log-clone-target",
+            base=self.work_dir,
+        )
+
+        log_path = Path(self.work_dir) / ".release_orchestrator" / "scheme_operations.log"
+        lines = [
+            json.loads(l)
+            for l in log_path.read_text(encoding="utf-8").strip().split("\n")
+            if l.strip()
+        ]
+        actions = [l["action"] for l in lines]
+        self.assertEqual(actions, ["save", "save", "clone"])
+
+        clone_entry = lines[-1]
+        self.assertEqual(clone_entry["action"], "clone")
+        self.assertEqual(clone_entry["scheme_name"], "log-clone-target")
+        self.assertEqual(clone_entry["extra"]["source"], "log-clone-source")
+        self.assertFalse(clone_entry["extra"]["overwrite"])
+
+    def test_clone_force_logs_overwrite(self) -> None:
+        source = _make_test_scheme("force-clone-source")
+        save_scheme(source, base=self.work_dir)
+        target = _make_test_scheme("force-clone-target")
+        save_scheme(target, base=self.work_dir)
+
+        clone_scheme(
+            "force-clone-source",
+            "force-clone-target",
+            base=self.work_dir,
+            overwrite=True,
+        )
+
+        log_path = Path(self.work_dir) / ".release_orchestrator" / "scheme_operations.log"
+        lines = [
+            json.loads(l)
+            for l in log_path.read_text(encoding="utf-8").strip().split("\n")
+            if l.strip()
+        ]
+        clone_entries = [l for l in lines if l["action"] == "clone"]
+        self.assertEqual(len(clone_entries), 1)
+        self.assertTrue(clone_entries[0]["extra"]["overwrite"])
+
+    def test_clone_preserves_policy_and_manifest(self) -> None:
+        source = _make_test_scheme("policy-source")
+        source.policy = {
+            "rules": ["rule1", "rule2"],
+            "threshold": 0.95,
+            "nested": {"a": 1, "b": [2, 3]},
+        }
+        source.manifest["custom_field"] = "custom_value"
+        save_scheme(source, base=self.work_dir)
+
+        cloned = clone_scheme(
+            "policy-source",
+            "policy-clone",
+            base=self.work_dir,
+        )
+
+        self.assertEqual(cloned.policy, source.policy)
+        self.assertEqual(cloned.policy["nested"]["b"], [2, 3])
+        self.assertEqual(cloned.manifest["custom_field"], "custom_value")
+
+    def test_clone_preserves_windows_details(self) -> None:
+        source = _make_test_scheme("window-detail-source")
+        for w in source.release_windows:
+            w.tags = ["region:us-east", "env:prod"]
+            w.description = f"Window {w.name}"
+        save_scheme(source, base=self.work_dir)
+
+        cloned = clone_scheme(
+            "window-detail-source",
+            "window-detail-clone",
+            base=self.work_dir,
+        )
+
+        self.assertEqual(len(cloned.release_windows), len(source.release_windows))
+        for i, w in enumerate(cloned.release_windows):
+            self.assertEqual(w.tags, source.release_windows[i].tags)
+            self.assertEqual(w.description, source.release_windows[i].description)
+            self.assertEqual(w.window_id, source.release_windows[i].window_id)
 
 
 class TestSchemeExitCodes(unittest.TestCase):

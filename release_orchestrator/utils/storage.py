@@ -294,6 +294,69 @@ def import_scheme_from_file(
     return scheme
 
 
+def clone_scheme(
+    source_name: str,
+    target_name: str,
+    base: Optional[str] = None,
+    overwrite: bool = False,
+    created_by: str = "admin@corp.com",
+):
+    """Clone an existing scheme into a new scheme.
+
+    Args:
+        source_name: Name of the scheme to clone.
+        target_name: Name of the new scheme.
+        base: Optional base working directory.
+        overwrite: If True, overwrite existing scheme with same name.
+        created_by: User creating the cloned scheme.
+
+    Returns:
+        The cloned ReleaseScheme instance.
+
+    Raises:
+        FileNotFoundError: If the source scheme does not exist.
+        ValueError: If the target name is invalid.
+        FileExistsError: If target scheme exists and overwrite is False.
+        IOError: If reading from or writing to disk fails.
+    """
+    from ..core.models import ReleaseScheme
+
+    _sanitize_scheme_name(target_name)
+
+    if not scheme_exists(source_name, base):
+        raise FileNotFoundError(f"Source scheme not found: '{source_name}'")
+
+    target_path = _scheme_file_path(target_name, base)
+    if target_path.exists() and not overwrite:
+        raise FileExistsError(
+            f"Scheme '{target_name}' already exists. Use overwrite=True to replace it."
+        )
+
+    source_scheme = load_scheme(source_name, base)
+
+    source_dict = source_scheme.to_dict()
+    source_dict["scheme_name"] = target_name
+    source_dict["created_at"] = now_iso()
+    source_dict["created_by"] = created_by
+    source_dict["updated_at"] = None
+
+    metadata = dict(source_dict.get("metadata", {}) or {})
+    metadata["cloned_from"] = source_name
+    metadata["source"] = "scheme_clone"
+    source_dict["metadata"] = metadata
+
+    cloned_scheme = ReleaseScheme.from_dict(source_dict)
+
+    save_scheme(cloned_scheme, base=base, overwrite=overwrite)
+    _log_scheme_operation(
+        "clone",
+        target_name,
+        base=base,
+        extra={"source": source_name, "overwrite": overwrite},
+    )
+    return cloned_scheme
+
+
 def _log_scheme_operation(
     action: str,
     scheme_name: str,

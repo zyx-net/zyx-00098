@@ -40,6 +40,7 @@ from ..utils.exit_codes import (
 )
 from ..utils.logger import get_logger
 from ..utils.storage import (
+    clone_scheme,
     delete_scheme,
     export_scheme_to_file,
     import_scheme_from_file,
@@ -176,6 +177,23 @@ def add_parser(subparsers: "argparse._SubParsersAction") -> None:
         help="Path to write the exported scheme JSON",
     )
 
+    # scheme clone
+    p_clone = sub.add_parser(
+        "clone",
+        help="Clone an existing scheme into a new one",
+        description="Copy windows, waves, manifest, policy, and tags from an existing scheme to a new named scheme with new creation metadata.",
+    )
+    p_clone.add_argument("source", help="Name of the existing scheme to clone")
+    p_clone.add_argument("target", help="Name for the new cloned scheme")
+    p_clone.add_argument(
+        "--by", default="admin@corp.com",
+        help="User creating the cloned scheme",
+    )
+    p_clone.add_argument(
+        "--force", "--overwrite", action="store_true", dest="overwrite",
+        help="Overwrite an existing scheme with the target name (default: reject)",
+    )
+
     p.set_defaults(func=_run)
 
 
@@ -184,7 +202,7 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
     cmd = getattr(args, "scheme_command", None)
 
     if not cmd:
-        print("ERROR: No scheme action specified. Use one of: save, load, list, delete, import, export")
+        print("ERROR: No scheme action specified. Use one of: save, load, list, delete, import, export, clone")
         return CommandResult(exit_code=EXIT_CONFIG_ERROR.code, run_id="")
 
     handlers = {
@@ -194,6 +212,7 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
         "delete": _handle_delete,
         "import": _handle_import,
         "export": _handle_export,
+        "clone": _handle_clone,
     }
 
     handler = handlers.get(cmd)
@@ -460,6 +479,64 @@ def _handle_export(args: argparse.Namespace, base: Optional[str]) -> CommandResu
 
     print(f"Exported scheme '{scheme_name}' to: {path}")
     return CommandResult(exit_code=EXIT_OK.code, run_id="")
+
+
+def _handle_clone(args: argparse.Namespace, base: Optional[str]) -> CommandResult:
+    source_name = args.source
+    target_name = args.target
+    overwrite = args.overwrite
+    created_by = getattr(args, "by", "admin@corp.com")
+
+    try:
+        scheme = clone_scheme(
+            source_name,
+            target_name,
+            base=base,
+            overwrite=overwrite,
+            created_by=created_by,
+        )
+    except FileNotFoundError as exc:
+        msg = str(exc)
+        if "Source scheme not found" in msg:
+            print(f"ERROR: Source scheme not found: '{source_name}'")
+            return CommandResult(exit_code=EXIT_SCHEME_NOT_FOUND.code, run_id="")
+        print(f"ERROR: {exc}")
+        return CommandResult(exit_code=EXIT_FILE_NOT_FOUND.code, run_id="")
+    except ValueError as exc:
+        print(f"ERROR: {exc}")
+        LOG.error(MODULE, f"Invalid scheme name: {exc}")
+        return CommandResult(exit_code=EXIT_SCHEME_VALIDATION_FAILED.code, run_id="")
+    except FileExistsError:
+        print(f"ERROR: Scheme '{target_name}' already exists. Use --force to overwrite.")
+        LOG.error(MODULE, f"Scheme '{target_name}' already exists (use --force to overwrite)")
+        return CommandResult(exit_code=EXIT_SCHEME_ALREADY_EXISTS.code, run_id="")
+    except IOError as exc:
+        print(f"ERROR: Failed to clone scheme: {exc}")
+        LOG.error(MODULE, f"Clone scheme IO error: {exc}")
+        return CommandResult(exit_code=EXIT_SCHEME_IO_ERROR.code, run_id="")
+
+    action = "Overwritten clone" if overwrite and scheme_exists(target_name, base) and scheme.updated_at else "Cloned"
+    print(f"\n{action} scheme: {target_name} (from '{source_name}')")
+    print(f"  Created by   : {scheme.created_by}")
+    print(f"  Created at   : {scheme.created_at}")
+    if scheme.updated_at:
+        print(f"  Updated at   : {scheme.updated_at}")
+    print(f"  Windows      : {len(scheme.release_windows)}")
+    print(f"  Waves        : {len(scheme.waves)}")
+    if scheme.manifest:
+        print(f"  Manifest     : {scheme.manifest.get('release_id', '(embedded)')}")
+    if scheme.description:
+        print(f"  Description  : {scheme.description}")
+    if scheme.tags:
+        print(f"  Tags         : {', '.join(scheme.tags)}")
+    if scheme.metadata.get('cloned_from'):
+        print(f"  Cloned from  : {scheme.metadata['cloned_from']}")
+
+    return CommandResult(
+        exit_code=EXIT_OK.code,
+        run_id="",
+        extra_artifacts={"scheme": scheme.to_dict()},
+    )
 
 
 def _build_scheme_from_args(args: argparse.Namespace) -> ReleaseScheme:
