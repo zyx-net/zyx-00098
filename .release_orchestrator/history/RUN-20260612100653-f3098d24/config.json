@@ -1,0 +1,21 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "scheme",
+    "scheme_command": "save",
+    "func": "<function _run at 0x000002581120D900>",
+    "name": "my-first-scheme",
+    "manifest": "examples/clean_manifest.json",
+    "windows": "examples/windows_config.json",
+    "waves": null,
+    "policy": null,
+    "description": null,
+    "by": "admin@corp.com",
+    "tags": [],
+    "overwrite": false,
+    "skip_validation": false
+  },
+  "command": "scheme",
+  "run_id": "RUN-20260612100653-f3098d24"
+}

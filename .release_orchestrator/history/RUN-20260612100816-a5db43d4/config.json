@@ -1,0 +1,13 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "scheme",
+    "scheme_command": "export",
+    "func": "<function _run at 0x000001B0377ED900>",
+    "name": "my-first-scheme",
+    "output": "temp/scheme_export.json"
+  },
+  "command": "scheme",
+  "run_id": "RUN-20260612100816-a5db43d4"
+}

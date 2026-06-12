@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-06-12T10:41:38Z",
+  "passed": true,
+  "issues": [
+    {
+      "component": "common-utils",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for common-utils",
+      "details": null
+    },
+    {
+      "component": "auth-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for auth-service",
+      "details": null
+    },
+    {
+      "component": "order-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for order-service",
+      "details": null
+    },
+    {
+      "component": "payment-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for payment-service",
+      "details": null
+    },
+    {
+      "component": "common-utils",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component common-utils approved by: alice@corp.com",
+      "details": {
+        "approvers": [
+          "alice@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "auth-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component auth-service approved by: bob@corp.com",
+      "details": {
+        "approvers": [
+          "bob@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "order-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component order-service approved by: carol@corp.com",
+      "details": {
+        "approvers": [
+          "carol@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "payment-service",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component payment-service approved by: dave@corp.com",
+      "details": {
+        "approvers": [
+          "dave@corp.com"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 8
+  }
+}

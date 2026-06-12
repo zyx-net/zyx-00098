@@ -1,0 +1,16 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "scheme",
+    "scheme_command": "load",
+    "func": "<function _run at 0x00000279C453D900>",
+    "name": "my-first-scheme",
+    "export_manifest": null,
+    "export_windows": null,
+    "export_waves": null,
+    "as_json": false
+  },
+  "command": "scheme",
+  "run_id": "RUN-20260612100636-c3b5e881"
+}

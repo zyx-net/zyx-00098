@@ -35,6 +35,7 @@ from .commands.rollback_cmd import add_parser as add_rollback
 from .commands.export_cmd import add_parser as add_export
 from .commands.history_cmd import add_parser as add_history
 from .commands.schedule_cmd import add_parser as add_schedule
+from .commands.scheme_cmd import add_parser as add_scheme
 from .utils.exit_codes import (
     ALL_EXIT_CODES,
     EXIT_INTERNAL_ERROR,
@@ -66,6 +67,7 @@ def _build_parser() -> argparse.ArgumentParser:
     add_export(sub)
     add_history(sub)
     add_schedule(sub)
+    add_scheme(sub)
 
     # exit-codes pseudo command (not wrapped in snapshot - it's a doc helper)
     p = sub.add_parser("exit-codes", help="Print exit code documentation")
@@ -134,6 +136,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             command_name = "history"
         elif "schedule" in mod:
             command_name = "schedule"
+        elif "scheme" in mod:
+            command_name = "scheme"
         else:
             command_name = "unknown"
 

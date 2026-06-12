@@ -1,0 +1,62 @@
+{
+  "run_id": "RUN-20260612100925-81060ec2",
+  "command": "scheme",
+  "started_at": "2026-06-12T10:09:25Z",
+  "finished_at": "2026-06-12T10:09:25Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "scheme",
+      "scheme_command": "import",
+      "func": "<function _run at 0x0000021CAC1BD900>",
+      "file": "temp/scheme_export.json",
+      "name": "imported-scheme",
+      "overwrite": false
+    },
+    "command": "scheme",
+    "run_id": "RUN-20260612100925-81060ec2"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T10:09:25Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612100925-81060ec2"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:09:25Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Saved scheme",
+      "extra": {
+        "scheme_name": "imported-scheme",
+        "path": "D:\\workSpace\\AI__SPACE\\zyx-00098\\.release_orchestrator\\schemes\\imported-scheme.json",
+        "overwrite": false
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:09:25Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Finished",
+      "extra": {
+        "run_id": "RUN-20260612100925-81060ec2",
+        "exit_code": 0
+      }
+    }
+  ],
+  "archive_path": null
+}

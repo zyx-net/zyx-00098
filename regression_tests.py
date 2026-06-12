@@ -15,6 +15,7 @@ them.  The script exits 0 only if *all* assertions pass.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -24,6 +25,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+
+# Shared env for subprocess calls so they can find the local package
+_RUN_ENV = os.environ.copy()
+_RUN_ENV["PYTHONPATH"] = str(ROOT)
+
+def _run_cli(args, **kwargs):
+    """Run the CLI with proper PYTHONPATH set to find local package."""
+    kwargs.setdefault("env", _RUN_ENV)
+    kwargs.setdefault("capture_output", True)
+    kwargs.setdefault("text", True)
+    kwargs.setdefault("cwd", str(ROOT))
+    return subprocess.run(
+        [sys.executable, "-m", "release_orchestrator"] + list(args),
+        **kwargs
+    )
 
 HIST_DIR = ROOT / ".release_orchestrator" / "history"
 EXPECTED_EXPORT_FILES = {
@@ -1440,6 +1456,350 @@ if log_snap:
 check("CLI stdout shows error issue codes matching log entries",
       "SCHEDULE_FAILED" in proc_log_test.stdout,
       f"stdout_has_error_codes={'SCHEDULE_FAILED' in proc_log_test.stdout}")
+
+
+# ---------------------------------------------------------------------------
+# Section 25: scheme - save, load, list, delete, import, export
+# ---------------------------------------------------------------------------
+print()
+print("Section 25: scheme - CLI command tests")
+print("-" * 60)
+
+def _clean_scheme_output(s):
+    """Remove log lines from scheme CLI output for JSON parsing."""
+    return '\n'.join([
+        line for line in s.strip().split('\n')
+        if not (
+            ('Starting execution' in line)
+            or ('Finished' in line and '"exit_code"' in line)
+            or ('Persisted run artifacts' in line)
+            or line.startswith('[20')
+        )
+    ]).strip()
+
+def _run_scheme_cli(args, cwd):
+    """Run scheme CLI command in specific working directory."""
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(ROOT)
+    return subprocess.run(
+        [sys.executable, "-m", "release_orchestrator"] + list(args),
+        env=env,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+
+# Use a clean temporary working directory for scheme tests
+import tempfile
+scheme_test_dir = tempfile.mkdtemp(prefix="regression_scheme_test_")
+original_cwd = os.getcwd()
+os.chdir(scheme_test_dir)
+
+# Initialize work dir
+os.makedirs(os.path.join(scheme_test_dir, ".release_orchestrator", "schemes"), exist_ok=True)
+
+# Copy examples to temp dir
+import shutil
+examples_src = ROOT / "examples"
+examples_dst = Path(scheme_test_dir) / "examples"
+shutil.copytree(examples_src, examples_dst)
+
+try:
+    # 25.1: scheme list on empty store
+    proc_list_empty = _run_scheme_cli(["scheme", "list"], cwd=scheme_test_dir)
+    check("scheme list - empty store exits 0",
+          proc_list_empty.returncode == 0,
+          f"exit_code={proc_list_empty.returncode}")
+    check("scheme list - empty shows helpful message",
+          "No saved schemes found" in proc_list_empty.stdout or "No saved schemes" in proc_list_empty.stdout,
+          f"has_empty_msg={'No saved schemes' in proc_list_empty.stdout}")
+
+    # 25.2: scheme save - basic save
+    proc_save = _run_scheme_cli([
+        "scheme", "save", "regression-scheme",
+        "-m", "examples/clean_manifest.json",
+        "-w", "examples/windows_config.json",
+        "--description", "Regression test scheme",
+        "--tag", "regression", "--tag", "v1.0",
+    ], cwd=scheme_test_dir)
+    check("scheme save - success exit code 0",
+          proc_save.returncode == 0,
+          f"exit_code={proc_save.returncode}")
+    check("scheme save - shows saved message",
+          "Saved scheme" in proc_save.stdout,
+          f"has_saved_msg={'Saved scheme' in proc_save.stdout}")
+    check("scheme save - shows scheme name in output",
+          "regression-scheme" in proc_save.stdout,
+          f"has_name={'regression-scheme' in proc_save.stdout}")
+    check("scheme save - shows windows count",
+          "Windows      : 3" in proc_save.stdout,
+          f"has_windows={'Windows      : 3' in proc_save.stdout}")
+    check("scheme save - shows tags",
+          "regression, v1.0" in proc_save.stdout,
+          f"has_tags={'regression, v1.0' in proc_save.stdout}")
+
+    # 25.3: scheme save - duplicate name without --force should fail
+    proc_save_dup = _run_scheme_cli([
+        "scheme", "save", "regression-scheme",
+        "-m", "examples/clean_manifest.json",
+        "-w", "examples/windows_config.json",
+    ], cwd=scheme_test_dir)
+    check("scheme save - duplicate exits 21",
+          proc_save_dup.returncode == 21,
+          f"exit_code={proc_save_dup.returncode}")
+    check("scheme save - duplicate shows error",
+          "already exists" in proc_save_dup.stderr or "already exists" in proc_save_dup.stdout,
+          f"has_dup_error={'already exists' in (proc_save_dup.stderr + proc_save_dup.stdout)}")
+
+    # 25.4: scheme save - duplicate with --force should succeed
+    proc_save_force = _run_scheme_cli([
+        "scheme", "save", "regression-scheme",
+        "-m", "examples/clean_manifest.json",
+        "-w", "examples/windows_config.json",
+        "--description", "UPDATED",
+        "--force",
+    ], cwd=scheme_test_dir)
+    check("scheme save --force - exits 0",
+          proc_save_force.returncode == 0,
+          f"exit_code={proc_save_force.returncode}")
+    check("scheme save --force - shows overwrite message",
+          "Overwritten" in proc_save_force.stdout or "Saved" in proc_save_force.stdout,
+          f"has_overwrite={'Overwritten' in proc_save_force.stdout}")
+
+    # 25.5: scheme list with saved schemes
+    proc_list = _run_scheme_cli(["scheme", "list"], cwd=scheme_test_dir)
+    check("scheme list - exits 0",
+          proc_list.returncode == 0,
+          f"exit_code={proc_list.returncode}")
+    check("scheme list - shows scheme name",
+          "regression-scheme" in proc_list.stdout,
+          f"has_scheme_name={'regression-scheme' in proc_list.stdout}")
+    check("scheme list - shows windows count",
+          "3" in proc_list.stdout,
+          f"has_windows_count={'3' in proc_list.stdout}")
+    check("scheme list - shows help tip",
+          "scheme load" in proc_list.stdout,
+          f"has_tip={'scheme load' in proc_list.stdout}")
+
+    # 25.6: scheme load - existing scheme
+    proc_load = _run_scheme_cli(["scheme", "load", "regression-scheme"], cwd=scheme_test_dir)
+    check("scheme load - exits 0",
+          proc_load.returncode == 0,
+          f"exit_code={proc_load.returncode}")
+    check("scheme load - shows scheme details",
+          "=== Scheme: regression-scheme ===" in proc_load.stdout,
+          f"has_header={'=== Scheme' in proc_load.stdout}")
+    check("scheme load - shows windows section",
+          "Windows" in proc_load.stdout,
+          f"has_windows_section={'Windows' in proc_load.stdout}")
+    check("scheme load - shows updated description",
+          "UPDATED" in proc_load.stdout,
+          f"has_updated_desc={'UPDATED' in proc_load.stdout}")
+
+    # 25.7: scheme load - nonexistent scheme
+    proc_load_fail = _run_scheme_cli(["scheme", "load", "nonexistent"], cwd=scheme_test_dir)
+    check("scheme load - nonexistent exits 22",
+          proc_load_fail.returncode == 22,
+          f"exit_code={proc_load_fail.returncode}")
+    check("scheme load - nonexistent shows error",
+          "not found" in proc_load_fail.stderr or "not found" in proc_load_fail.stdout,
+          f"has_not_found_error={'not found' in (proc_load_fail.stderr + proc_load_fail.stdout)}")
+
+    # 25.8: scheme export
+    export_path = os.path.join(scheme_test_dir, "exported_scheme.json")
+    proc_export = _run_scheme_cli([
+        "scheme", "export", "regression-scheme", "-o", export_path,
+    ], cwd=scheme_test_dir)
+    check("scheme export - exits 0",
+          proc_export.returncode == 0,
+          f"exit_code={proc_export.returncode}")
+    check("scheme export - creates file",
+          os.path.exists(export_path),
+          f"file_exists={os.path.exists(export_path)}")
+    check("scheme export - file has valid JSON",
+          json.load(open(export_path)).get("scheme_name") == "regression-scheme",
+          f"valid_json={json.load(open(export_path)).get('scheme_name') == 'regression-scheme'}")
+
+    # 25.9: scheme export nonexistent
+    proc_export_fail = _run_scheme_cli([
+        "scheme", "export", "nonexistent", "-o", "should_not_exist.json",
+    ], cwd=scheme_test_dir)
+    check("scheme export - nonexistent exits 22",
+          proc_export_fail.returncode == 22,
+          f"exit_code={proc_export_fail.returncode}")
+
+    # 25.10: scheme import
+    import_path = os.path.join(scheme_test_dir, "to_import.json")
+    with open(import_path, "w") as f:
+        json.dump({
+            "scheme_name": "imported-scheme",
+            "created_at": "2026-06-01T00:00:00Z",
+            "created_by": "regression@test.com",
+            "description": "Imported test",
+            "release_windows": [
+                {"window_id": "WIN-TEST", "name": "Test Win",
+                 "start_time": "2026-07-01T09:00:00Z", "end_time": "2026-07-01T17:00:00Z",
+                 "capacity_max": 5, "allowed_environments": ["production"],
+                 "locked": False, "freeze_periods": []}
+            ],
+            "waves": [],
+            "manifest": None,
+            "tags": ["imported"]
+        }, f)
+
+    proc_import = _run_scheme_cli(["scheme", "import", import_path], cwd=scheme_test_dir)
+    check("scheme import - exits 0",
+          proc_import.returncode == 0,
+          f"exit_code={proc_import.returncode}")
+    check("scheme import - shows imported message",
+          "Imported scheme" in proc_import.stdout,
+          f"has_import_msg={'Imported scheme' in proc_import.stdout}")
+
+    # 25.11: scheme import with name override
+    proc_import_rename = _run_scheme_cli([
+        "scheme", "import", import_path, "-n", "renamed-scheme",
+    ], cwd=scheme_test_dir)
+    check("scheme import - rename exits 0",
+          proc_import_rename.returncode == 0,
+          f"exit_code={proc_import_rename.returncode}")
+    proc_list_json = _run_scheme_cli(["scheme", "list", "--json"], cwd=scheme_test_dir)
+    clean_json = _clean_scheme_output(proc_list_json.stdout)
+    check("scheme import - renamed scheme exists",
+          "renamed-scheme" in clean_json,
+          f"renamed_exists={'renamed-scheme' in clean_json}")
+
+    # 25.12: scheme import bad JSON
+    bad_json_path = os.path.join(scheme_test_dir, "bad.json")
+    with open(bad_json_path, "w") as f:
+        f.write("{this is not valid json}")
+    proc_import_bad = _run_scheme_cli(["scheme", "import", bad_json_path], cwd=scheme_test_dir)
+    check("scheme import - bad JSON exits 23",
+          proc_import_bad.returncode == 23,
+          f"exit_code={proc_import_bad.returncode}")
+    check("scheme import - bad JSON shows error",
+          "Invalid JSON" in proc_import_bad.stderr or "Invalid JSON" in proc_import_bad.stdout,
+          f"has_invalid_json={'Invalid JSON' in (proc_import_bad.stderr + proc_import_bad.stdout)}")
+
+    # 25.13: scheme delete with --force
+    proc_delete = _run_scheme_cli([
+        "scheme", "delete", "regression-scheme", "-f",
+    ], cwd=scheme_test_dir)
+    check("scheme delete - exits 0",
+          proc_delete.returncode == 0,
+          f"exit_code={proc_delete.returncode}")
+    check("scheme delete - shows deleted message",
+          "Deleted scheme" in proc_delete.stdout,
+          f"has_deleted_msg={'Deleted scheme' in proc_delete.stdout}")
+    check("scheme delete - scheme no longer exists",
+          not (Path(scheme_test_dir) / ".release_orchestrator" / "schemes" / "regression-scheme.json").exists(),
+          f"file_gone={not (Path(scheme_test_dir)/'.release_orchestrator/schemes/regression-scheme.json').exists()}")
+
+    # 25.14: scheme delete nonexistent
+    proc_delete_fail = _run_scheme_cli([
+        "scheme", "delete", "nonexistent", "-f",
+    ], cwd=scheme_test_dir)
+    check("scheme delete - nonexistent exits 22",
+          proc_delete_fail.returncode == 22,
+          f"exit_code={proc_delete_fail.returncode}")
+
+    # 25.15: scheme validation - overlapping windows shows warning
+    bad_windows_path = os.path.join(scheme_test_dir, "overlapping_windows.json")
+    with open(bad_windows_path, "w") as f:
+        json.dump({
+            "windows": [
+                {"window_id": "WIN-A", "name": "Win A",
+                 "start_time": "2026-06-15T09:00:00Z", "end_time": "2026-06-15T17:00:00Z",
+                 "capacity_max": 3, "allowed_environments": ["production"],
+                 "locked": False, "freeze_periods": []},
+                {"window_id": "WIN-B", "name": "Win B",
+                 "start_time": "2026-06-15T10:00:00Z", "end_time": "2026-06-15T18:00:00Z",
+                 "capacity_max": 3, "allowed_environments": ["production"],
+                 "locked": False, "freeze_periods": []},
+            ]
+        }, f)
+
+    proc_overlap = _run_scheme_cli([
+        "scheme", "save", "overlap-test", "-w", bad_windows_path,
+    ], cwd=scheme_test_dir)
+    check("scheme save - overlapping windows exits 0 (warning only)",
+          proc_overlap.returncode == 0,
+          f"exit_code={proc_overlap.returncode}")
+    check("scheme save - overlapping shows warning",
+          "WINDOW_TIME_OVERLAP" in proc_overlap.stdout or "overlapping" in proc_overlap.stdout.lower(),
+          f"has_overlap_warning={'WINDOW_TIME_OVERLAP' in proc_overlap.stdout}")
+
+    # 25.16: scheme save missing windows and manifest - should fail
+    proc_bad_save = _run_scheme_cli([
+        "scheme", "save", "bad-scheme-no-inputs",
+    ], cwd=scheme_test_dir)
+    check("scheme save - missing inputs exits non-zero",
+          proc_bad_save.returncode != 0,
+          f"exit_code={proc_bad_save.returncode}")
+
+    # 25.17: scheme operations log exists and has entries
+    log_path = Path(scheme_test_dir) / ".release_orchestrator" / "scheme_operations.log"
+    check("scheme operations log exists",
+          log_path.exists(),
+          f"log_exists={log_path.exists()}")
+    if log_path.exists():
+        log_lines = [l for l in log_path.read_text().strip().split("\n") if l.strip()]
+        check("scheme operations log has entries",
+              len(log_lines) >= 5,
+              f"log_entries={len(log_lines)}")
+        actions = [json.loads(l)["action"] for l in log_lines]
+        check("scheme operations log has save entries",
+              "save" in actions,
+              f"has_save={'save' in actions}")
+        check("scheme operations log has delete entries",
+              "delete" in actions,
+              f"has_delete={'delete' in actions}")
+        check("scheme operations log has export entries",
+              "export" in actions,
+              f"has_export={'export' in actions}")
+        check("scheme operations log has import entries",
+              "import" in actions,
+              f"has_import={'import' in actions}")
+
+    # 25.18: scheme list --json output
+    proc_list_json = _run_scheme_cli(["scheme", "list", "--json"], cwd=scheme_test_dir)
+    check("scheme list --json exits 0",
+          proc_list_json.returncode == 0,
+          f"exit_code={proc_list_json.returncode}")
+    try:
+        clean_json = _clean_scheme_output(proc_list_json.stdout)
+        json_data = json.loads(clean_json)
+        check("scheme list --json returns valid list",
+              isinstance(json_data, list),
+              f"is_list={isinstance(json_data, list)}")
+        check("scheme list --json has imported-scheme",
+              any(item.get("name") == "imported-scheme" for item in json_data),
+              f"has_imported={any(item.get('name') == 'imported-scheme' for item in json_data)}")
+    except json.JSONDecodeError:
+        check("scheme list --json is valid JSON", False, "not_valid_json")
+
+    # 25.19: scheme load --json output
+    proc_load_json = _run_scheme_cli([
+        "scheme", "load", "imported-scheme", "--json",
+    ], cwd=scheme_test_dir)
+    check("scheme load --json exits 0",
+          proc_load_json.returncode == 0,
+          f"exit_code={proc_load_json.returncode}")
+    try:
+        clean_json = _clean_scheme_output(proc_load_json.stdout)
+        scheme_json = json.loads(clean_json)
+        check("scheme load --json has correct scheme_name",
+              scheme_json.get("scheme_name") == "imported-scheme",
+              f"correct_name={scheme_json.get('scheme_name') == 'imported-scheme'}")
+        check("scheme load --json has release_windows",
+              "release_windows" in scheme_json,
+              f"has_windows={'release_windows' in scheme_json}")
+    except json.JSONDecodeError:
+        check("scheme load --json is valid JSON", False, "not_valid_json")
+
+finally:
+    # Cleanup
+    os.chdir(original_cwd)
+    shutil.rmtree(scheme_test_dir, ignore_errors=True)
 
 
 # ---------------------------------------------------------------------------

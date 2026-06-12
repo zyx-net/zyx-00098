@@ -1,0 +1,49 @@
+{
+  "run_id": "RUN-20260612100411-78d94be7",
+  "command": "scheme",
+  "started_at": "2026-06-12T10:04:11Z",
+  "finished_at": "2026-06-12T10:04:11Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "scheme",
+      "scheme_command": "list",
+      "func": "<function _run at 0x0000026D7C99D900>",
+      "as_json": false
+    },
+    "command": "scheme",
+    "run_id": "RUN-20260612100411-78d94be7"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T10:04:11Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612100411-78d94be7"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:04:11Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Finished",
+      "extra": {
+        "run_id": "RUN-20260612100411-78d94be7",
+        "exit_code": 0
+      }
+    }
+  ],
+  "archive_path": null
+}

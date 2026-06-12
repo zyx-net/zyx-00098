@@ -1,0 +1,12 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "scheme",
+    "scheme_command": "list",
+    "func": "<function _run at 0x0000026D7C99D900>",
+    "as_json": false
+  },
+  "command": "scheme",
+  "run_id": "RUN-20260612100411-78d94be7"
+}

@@ -1,0 +1,30 @@
+{
+  "policy_version": "1.0",
+  "default_environment": "production",
+  "env_rules": {
+    "dev": {
+      "require_approval": false,
+      "allow_version_downgrade": true,
+      "skip_checksum_components": [],
+      "dry_run_failure_blocks_export": false
+    },
+    "test": {
+      "require_approval": false,
+      "allow_version_downgrade": false,
+      "skip_checksum_components": [],
+      "dry_run_failure_blocks_export": true
+    },
+    "staging": {
+      "require_approval": true,
+      "allow_version_downgrade": false,
+      "skip_checksum_components": [],
+      "dry_run_failure_blocks_export": true
+    },
+    "production": {
+      "require_approval": true,
+      "allow_version_downgrade": false,
+      "skip_checksum_components": [],
+      "dry_run_failure_blocks_export": true
+    }
+  }
+}

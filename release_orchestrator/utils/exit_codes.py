@@ -76,6 +76,22 @@ EXIT_UNKNOWN_COMMAND = ExitCode(
     20, "EXIT_UNKNOWN_COMMAND",
     "Unknown or invalid command specified."
 )
+EXIT_SCHEME_ALREADY_EXISTS = ExitCode(
+    21, "EXIT_SCHEME_ALREADY_EXISTS",
+    "A scheme with the same name already exists. Use --force to overwrite."
+)
+EXIT_SCHEME_NOT_FOUND = ExitCode(
+    22, "EXIT_SCHEME_NOT_FOUND",
+    "The specified scheme name does not exist."
+)
+EXIT_SCHEME_VALIDATION_FAILED = ExitCode(
+    23, "EXIT_SCHEME_VALIDATION_FAILED",
+    "Scheme validation failed: missing fields, bad JSON, window conflicts, or locked window reuse."
+)
+EXIT_SCHEME_IO_ERROR = ExitCode(
+    24, "EXIT_SCHEME_IO_ERROR",
+    "Failed to read or write scheme files to disk."
+)
 EXIT_INTERNAL_ERROR = ExitCode(
     99, "EXIT_INTERNAL_ERROR",
     "Unexpected internal error occurred during execution."
@@ -99,6 +115,10 @@ ALL_EXIT_CODES = [
     EXIT_WINDOW_LOCKED,
     EXIT_WINDOW_FROZEN,
     EXIT_UNKNOWN_COMMAND,
+    EXIT_SCHEME_ALREADY_EXISTS,
+    EXIT_SCHEME_NOT_FOUND,
+    EXIT_SCHEME_VALIDATION_FAILED,
+    EXIT_SCHEME_IO_ERROR,
     EXIT_INTERNAL_ERROR,
 ]
 

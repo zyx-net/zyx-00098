@@ -47,6 +47,8 @@ DRY_RUN_FILE = "dry_run_result.json"
 SCHEDULE_FILE = "schedule.json"
 SCHEDULE_SUMMARY_FILE = "schedule_summary.md"
 CONFIG_FILE = "config.json"
+SCHEMES_DIR = "schemes"
+SCHEME_HISTORY_FILE = "scheme_operations.log"
 
 
 def get_work_dir(base: Optional[str] = None) -> Path:
@@ -59,7 +61,262 @@ def ensure_work_dir(base: Optional[str] = None) -> Path:
     """Create work directory structure if not already present."""
     work = get_work_dir(base)
     (work / HISTORY_DIR).mkdir(parents=True, exist_ok=True)
+    (work / SCHEMES_DIR).mkdir(parents=True, exist_ok=True)
     return work
+
+
+def get_schemes_dir(base: Optional[str] = None) -> Path:
+    """Return the directory that stores named scheduling schemes."""
+    work = get_work_dir(base)
+    schemes_dir = work / SCHEMES_DIR
+    schemes_dir.mkdir(parents=True, exist_ok=True)
+    return schemes_dir
+
+
+def _scheme_file_path(scheme_name: str, base: Optional[str] = None) -> Path:
+    """Return the file path for a specific named scheme."""
+    safe_name = _sanitize_scheme_name(scheme_name)
+    return get_schemes_dir(base) / f"{safe_name}.json"
+
+
+def _sanitize_scheme_name(name: str) -> str:
+    """Sanitize scheme name to be safe for use as a filename."""
+    import re
+    cleaned = re.sub(r"[^\w\-.]", "_", name.strip())
+    if not cleaned:
+        raise ValueError("Scheme name cannot be empty after sanitization")
+    return cleaned
+
+
+def scheme_exists(scheme_name: str, base: Optional[str] = None) -> bool:
+    """Check if a scheme with the given name exists."""
+    return _scheme_file_path(scheme_name, base).exists()
+
+
+def save_scheme(scheme, base: Optional[str] = None, overwrite: bool = False) -> Path:
+    """Save a ReleaseScheme to disk.
+
+    Args:
+        scheme: The ReleaseScheme instance to save.
+        base: Optional base working directory.
+        overwrite: If True, overwrite existing scheme with same name.
+                   If False (default), raise FileExistsError.
+
+    Returns:
+        Path to the saved scheme file.
+
+    Raises:
+        FileExistsError: If scheme exists and overwrite is False.
+        IOError: If writing to disk fails.
+    """
+    path = _scheme_file_path(scheme.scheme_name, base)
+    if path.exists() and not overwrite:
+        raise FileExistsError(
+            f"Scheme '{scheme.scheme_name}' already exists. Use overwrite=True to replace it."
+        )
+
+    if overwrite and path.exists():
+        scheme.updated_at = now_iso()
+
+    try:
+        save_json(scheme.to_dict(), path)
+    except Exception as exc:
+        raise IOError(f"Failed to save scheme '{scheme.scheme_name}': {exc}") from exc
+
+    LOG.info(
+        MODULE,
+        f"Saved scheme",
+        scheme_name=scheme.scheme_name,
+        path=str(path),
+        overwrite=overwrite,
+    )
+    _log_scheme_operation("save", scheme.scheme_name, base=base, extra={"overwrite": overwrite})
+    return path
+
+
+def load_scheme(scheme_name: str, base: Optional[str] = None):
+    """Load a ReleaseScheme from disk by name.
+
+    Args:
+        scheme_name: Name of the scheme to load.
+        base: Optional base working directory.
+
+    Returns:
+        The loaded ReleaseScheme instance.
+
+    Raises:
+        FileNotFoundError: If the scheme does not exist.
+        ValueError: If the scheme JSON is invalid or missing required fields.
+    """
+    from ..core.models import ReleaseScheme
+
+    path = _scheme_file_path(scheme_name, base)
+    if not path.exists():
+        raise FileNotFoundError(f"Scheme not found: '{scheme_name}'")
+
+    try:
+        data = load_json(path)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid scheme JSON for '{scheme_name}': {exc}") from exc
+    except Exception as exc:
+        raise IOError(f"Failed to read scheme '{scheme_name}': {exc}") from exc
+
+    try:
+        scheme = ReleaseScheme.from_dict(data)
+    except (KeyError, TypeError) as exc:
+        raise ValueError(f"Scheme '{scheme_name}' has missing or invalid fields: {exc}") from exc
+
+    LOG.info(
+        MODULE,
+        f"Loaded scheme",
+        scheme_name=scheme_name,
+        path=str(path),
+    )
+    return scheme
+
+
+def list_schemes(base: Optional[str] = None) -> List[Dict[str, Any]]:
+    """List all saved schemes with their metadata.
+
+    Returns:
+        List of dicts with keys: name, created_at, updated_at, description, tags, path.
+    """
+    schemes_dir = get_schemes_dir(base)
+    results = []
+    if not schemes_dir.exists():
+        return results
+
+    for entry in sorted(schemes_dir.iterdir()):
+        if entry.is_file() and entry.suffix == ".json":
+            try:
+                data = load_json(entry)
+                results.append({
+                    "name": data.get("scheme_name", entry.stem),
+                    "created_at": data.get("created_at"),
+                    "updated_at": data.get("updated_at"),
+                    "created_by": data.get("created_by", "unknown"),
+                    "description": data.get("description"),
+                    "tags": data.get("tags", []),
+                    "windows_count": len(data.get("release_windows", [])),
+                    "waves_count": len(data.get("waves", [])),
+                    "path": str(entry),
+                })
+            except Exception:
+                continue
+    return results
+
+
+def delete_scheme(scheme_name: str, base: Optional[str] = None) -> bool:
+    """Delete a scheme by name.
+
+    Returns:
+        True if the scheme was deleted, False if it didn't exist.
+    """
+    path = _scheme_file_path(scheme_name, base)
+    if not path.exists():
+        return False
+    try:
+        path.unlink()
+        LOG.info(MODULE, f"Deleted scheme", scheme_name=scheme_name, path=str(path))
+        _log_scheme_operation("delete", scheme_name, base=base)
+        return True
+    except Exception as exc:
+        raise IOError(f"Failed to delete scheme '{scheme_name}': {exc}") from exc
+
+
+def export_scheme_to_file(scheme_name: str, output_path: str, base: Optional[str] = None) -> Path:
+    """Export an existing scheme to a JSON file at the given path.
+
+    This is different from save_scheme in that it writes to an arbitrary
+    user-specified path rather than the internal schemes directory.
+    """
+    scheme = load_scheme(scheme_name, base)
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        save_json(scheme.to_dict(), out)
+    except Exception as exc:
+        raise IOError(f"Failed to export scheme '{scheme_name}': {exc}") from exc
+
+    LOG.info(
+        MODULE,
+        f"Exported scheme",
+        scheme_name=scheme_name,
+        output_path=str(out),
+    )
+    _log_scheme_operation(
+        "export", scheme_name, base=base, extra={"output_path": str(out)}
+    )
+    return out
+
+
+def import_scheme_from_file(
+    input_path: str,
+    scheme_name: Optional[str] = None,
+    base: Optional[str] = None,
+    overwrite: bool = False,
+):
+    """Import a scheme from an external JSON file into the schemes store.
+
+    Args:
+        input_path: Path to the scheme JSON file.
+        scheme_name: Optional name override; if None, uses the name in the file.
+        base: Optional base working directory.
+        overwrite: Whether to overwrite an existing scheme with the same name.
+
+    Returns:
+        The imported ReleaseScheme instance.
+    """
+    from ..core.models import ReleaseScheme
+
+    p = Path(input_path)
+    if not p.exists():
+        raise FileNotFoundError(f"Scheme file not found: {input_path}")
+    try:
+        data = load_json(p)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON in scheme file '{input_path}': {exc}") from exc
+
+    if scheme_name:
+        data["scheme_name"] = scheme_name
+        if "updated_at" in data:
+            data["updated_at"] = None
+
+    try:
+        scheme = ReleaseScheme.from_dict(data)
+    except (KeyError, TypeError) as exc:
+        raise ValueError(f"Scheme file '{input_path}' has missing or invalid fields: {exc}") from exc
+
+    save_scheme(scheme, base=base, overwrite=overwrite)
+    _log_scheme_operation(
+        "import", scheme.scheme_name, base=base, extra={"source_path": str(p)}
+    )
+    return scheme
+
+
+def _log_scheme_operation(
+    action: str,
+    scheme_name: str,
+    base: Optional[str] = None,
+    extra: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Append a scheme operation to the scheme operations log."""
+    import getpass
+    work = get_work_dir(base)
+    log_path = work / SCHEME_HISTORY_FILE
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "timestamp": now_iso(),
+            "action": action,
+            "scheme_name": scheme_name,
+            "user": getpass.getuser() or "unknown",
+            "extra": extra or {},
+        }
+        with log_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
 
 
 def get_run_dir(run_id: str, base: Optional[str] = None) -> Path:

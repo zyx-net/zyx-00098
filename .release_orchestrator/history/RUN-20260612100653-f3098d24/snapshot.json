@@ -1,0 +1,65 @@
+{
+  "run_id": "RUN-20260612100653-f3098d24",
+  "command": "scheme",
+  "started_at": "2026-06-12T10:06:53Z",
+  "finished_at": "2026-06-12T10:06:53Z",
+  "exit_code": 21,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "scheme",
+      "scheme_command": "save",
+      "func": "<function _run at 0x000002581120D900>",
+      "name": "my-first-scheme",
+      "manifest": "examples/clean_manifest.json",
+      "windows": "examples/windows_config.json",
+      "waves": null,
+      "policy": null,
+      "description": null,
+      "by": "admin@corp.com",
+      "tags": [],
+      "overwrite": false,
+      "skip_validation": false
+    },
+    "command": "scheme",
+    "run_id": "RUN-20260612100653-f3098d24"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T10:06:53Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612100653-f3098d24"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:06:53Z",
+      "level": "ERROR",
+      "module": "cmd.scheme",
+      "message": "Scheme 'my-first-scheme' already exists (use --force to overwrite)",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T10:06:53Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Finished",
+      "extra": {
+        "run_id": "RUN-20260612100653-f3098d24",
+        "exit_code": 21
+      }
+    }
+  ],
+  "archive_path": null
+}

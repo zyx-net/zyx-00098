@@ -1,0 +1,14 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "scheme",
+    "scheme_command": "import",
+    "func": "<function _run at 0x0000021CAC1BD900>",
+    "file": "temp/scheme_export.json",
+    "name": "imported-scheme",
+    "overwrite": false
+  },
+  "command": "scheme",
+  "run_id": "RUN-20260612100925-81060ec2"
+}

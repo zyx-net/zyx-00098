@@ -1,0 +1,19 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "schedule",
+    "manifest": "D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+    "policy": null,
+    "windows": "D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\windows_config.json",
+    "waves": null,
+    "output": null,
+    "lock": null,
+    "unlock": null,
+    "by": "admin@corp.com",
+    "skip_validate": false,
+    "func": "<function _run at 0x0000012E26163AB0>"
+  },
+  "command": "schedule",
+  "run_id": "RUN-20260612104137-f824040f"
+}

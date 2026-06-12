@@ -1,0 +1,70 @@
+{
+  "run_id": "RUN-20260612100816-a5db43d4",
+  "command": "scheme",
+  "started_at": "2026-06-12T10:08:16Z",
+  "finished_at": "2026-06-12T10:08:16Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "scheme",
+      "scheme_command": "export",
+      "func": "<function _run at 0x000001B0377ED900>",
+      "name": "my-first-scheme",
+      "output": "temp/scheme_export.json"
+    },
+    "command": "scheme",
+    "run_id": "RUN-20260612100816-a5db43d4"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T10:08:16Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612100816-a5db43d4"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:08:16Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded scheme",
+      "extra": {
+        "scheme_name": "my-first-scheme",
+        "path": "D:\\workSpace\\AI__SPACE\\zyx-00098\\.release_orchestrator\\schemes\\my-first-scheme.json"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:08:16Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Exported scheme",
+      "extra": {
+        "scheme_name": "my-first-scheme",
+        "output_path": "temp\\scheme_export.json"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:08:16Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Finished",
+      "extra": {
+        "run_id": "RUN-20260612100816-a5db43d4",
+        "exit_code": 0
+      }
+    }
+  ],
+  "archive_path": null
+}

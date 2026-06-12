@@ -712,3 +712,70 @@ class ScheduleResult:
             total_scheduled=int(data.get("total_scheduled", 0)),
             total_unscheduled=int(data.get("total_unscheduled", 0)),
         )
+
+
+@dataclass
+class ReleaseScheme:
+    """A named release scheduling scheme that captures key inputs for plan/schedule.
+
+    Stores manifest, windows, waves, and policy references so a team can
+    quickly revisit different release window configurations without
+    retyping command-line arguments.
+    """
+
+    scheme_name: str
+    created_at: str
+    created_by: str
+    updated_at: Optional[str] = None
+    description: Optional[str] = None
+    manifest: Optional[Dict[str, Any]] = None
+    manifest_path: Optional[str] = None
+    release_windows: List[ReleaseWindow] = field(default_factory=list)
+    waves: List[Wave] = field(default_factory=list)
+    policy_path: Optional[str] = None
+    policy: Optional[Dict[str, Any]] = None
+    windows_config_path: Optional[str] = None
+    waves_config_path: Optional[str] = None
+    tags: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["release_windows"] = [w.to_dict() if hasattr(w, "to_dict") else w for w in self.release_windows]
+        d["waves"] = [w.to_dict() if hasattr(w, "to_dict") else w for w in self.waves]
+        return d
+
+    def to_json(self, indent: int = 2) -> str:
+        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False, default=str)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ReleaseScheme":
+        release_windows = [
+            ReleaseWindow.from_dict(w) if isinstance(w, dict) else w
+            for w in data.get("release_windows", [])
+        ]
+        waves = [
+            Wave.from_dict(w) if isinstance(w, dict) else w
+            for w in data.get("waves", [])
+        ]
+        return cls(
+            scheme_name=data["scheme_name"],
+            created_at=data.get("created_at", now_iso()),
+            created_by=data.get("created_by", "unknown"),
+            updated_at=data.get("updated_at"),
+            description=data.get("description"),
+            manifest=data.get("manifest"),
+            manifest_path=data.get("manifest_path"),
+            release_windows=release_windows,
+            waves=waves,
+            policy_path=data.get("policy_path"),
+            policy=data.get("policy"),
+            windows_config_path=data.get("windows_config_path"),
+            waves_config_path=data.get("waves_config_path"),
+            tags=list(data.get("tags", [])),
+            metadata=dict(data.get("metadata", {})),
+        )
+
+    @classmethod
+    def from_json(cls, content: str) -> "ReleaseScheme":
+        return cls.from_dict(json.loads(content))

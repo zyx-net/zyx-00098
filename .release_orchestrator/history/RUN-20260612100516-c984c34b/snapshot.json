@@ -1,0 +1,108 @@
+{
+  "run_id": "RUN-20260612100516-c984c34b",
+  "command": "scheme",
+  "started_at": "2026-06-12T10:05:16Z",
+  "finished_at": "2026-06-12T10:05:16Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "scheme",
+      "scheme_command": "save",
+      "func": "<function _run at 0x000001FE7E0DD900>",
+      "name": "my-first-scheme",
+      "manifest": "examples/clean_manifest.json",
+      "windows": "examples/windows_config.json",
+      "waves": "examples/manifest_with_inline_windows.json",
+      "policy": null,
+      "description": "Test scheme for production release",
+      "by": "admin@corp.com",
+      "tags": [
+        "production",
+        "v1.0"
+      ],
+      "overwrite": false,
+      "skip_validation": false
+    },
+    "command": "scheme",
+    "run_id": "RUN-20260612100516-c984c34b"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T10:05:16Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612100516-c984c34b"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:05:16Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from examples/clean_manifest.json",
+      "extra": {
+        "components": 4
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:05:16Z",
+      "level": "INFO",
+      "module": "scheduler",
+      "message": "Loaded 3 windows from JSON",
+      "extra": {
+        "path": "examples\\windows_config.json"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:05:16Z",
+      "level": "INFO",
+      "module": "scheduler",
+      "message": "Loaded 0 waves from JSON",
+      "extra": {
+        "path": "examples\\manifest_with_inline_windows.json"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:05:16Z",
+      "level": "INFO",
+      "module": "scheme_validator",
+      "message": "Validating scheme",
+      "extra": {
+        "scheme_name": "my-first-scheme"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:05:16Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Saved scheme",
+      "extra": {
+        "scheme_name": "my-first-scheme",
+        "path": "D:\\workSpace\\AI__SPACE\\zyx-00098\\.release_orchestrator\\schemes\\my-first-scheme.json",
+        "overwrite": false
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:05:16Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[scheme] Finished",
+      "extra": {
+        "run_id": "RUN-20260612100516-c984c34b",
+        "exit_code": 0
+      }
+    }
+  ],
+  "archive_path": null
+}

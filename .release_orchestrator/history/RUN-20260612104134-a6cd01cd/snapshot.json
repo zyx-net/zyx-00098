@@ -1,0 +1,67 @@
+{
+  "run_id": "RUN-20260612104134-a6cd01cd",
+  "command": "validate",
+  "started_at": "2026-06-12T10:41:34Z",
+  "finished_at": "2026-06-12T10:41:34Z",
+  "exit_code": 11,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "validate",
+      "manifest": "D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+      "policy": "/nonexistent/policy.json",
+      "no_checksum": false,
+      "strict": false,
+      "func": "<function _run at 0x0000014ED57B5E80>"
+    },
+    "command": "validate",
+    "run_id": "RUN-20260612104134-a6cd01cd"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T10:41:34Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[validate] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612104134-a6cd01cd"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:41:34Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+      "extra": {
+        "components": 4
+      }
+    },
+    {
+      "timestamp": "2026-06-12T10:41:34Z",
+      "level": "ERROR",
+      "module": "cmd.validate",
+      "message": "Policy file not found: /nonexistent/policy.json",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T10:41:34Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[validate] Finished",
+      "extra": {
+        "run_id": "RUN-20260612104134-a6cd01cd",
+        "exit_code": 11
+      }
+    }
+  ],
+  "archive_path": null
+}
