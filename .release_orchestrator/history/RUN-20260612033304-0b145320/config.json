@@ -1,0 +1,13 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "validate",
+    "manifest": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\codex-zyx-00098-review\\missing_approval_manifest.json",
+    "no_checksum": false,
+    "strict": false,
+    "func": "<function _run at 0x00000246D3517270>"
+  },
+  "command": "validate",
+  "run_id": "RUN-20260612033304-0b145320"
+}

@@ -1,0 +1,13 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": null,
+    "limit": 20,
+    "show": "RUN-xxxxxxx",
+    "show_logs": true,
+    "func": "<function _run at 0x00000202F72FD590>"
+  },
+  "command": "history",
+  "run_id": "RUN-20260612020852-b0d032c0"
+}

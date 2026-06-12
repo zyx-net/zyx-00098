@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+    "output": "D:\\workSpace\\AI__SPACE\\zyx-00098\\archives\\repro_check_bundle",
+    "format": "zip",
+    "no_dryrun": false,
+    "seed": null,
+    "func": "<function _run at 0x000002703622D2D0>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612021321-33458235"
+}

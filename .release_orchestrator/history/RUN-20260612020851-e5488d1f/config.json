@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "examples/sample_manifest.json",
+    "output": "archives/release_v1",
+    "format": "zip",
+    "no_dryrun": false,
+    "seed": null,
+    "func": "<function _run at 0x0000028E176BD2D0>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612020851-e5488d1f"
+}

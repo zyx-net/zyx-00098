@@ -40,7 +40,7 @@ def add_parser(subparsers: "argparse._SubParsersAction") -> None:
     p.set_defaults(func=_run)
 
 
-def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
+def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
     try:
         manifest = load_manifest(args.manifest)
     except FileNotFoundError:
@@ -66,10 +66,24 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
         executor = DryRunExecutor(manifest, plan, seed=args.seed)
         dry_run_result = executor.execute()
 
+    # Snapshot the config and log text BEFORE we append any extra export-
+    # related log lines, so the values written to the zip match what
+    # base.run_with_snapshot will later persist under history/<run_id>/.
+    args_dict = vars(args).copy()
+    args_dict["func"] = repr(args_dict.get("func", _run))
+    config_dict = {
+        "args": args_dict,
+        "command": "export",
+        "run_id": run_id,
+    }
+    log_text = get_logger().get_text()
+
     extra = {
         "validation.json": validation_dict,
         "release_plan.json": plan_dict,
         "rollback_plan.json": rollback_dict,
+        "config.json": config_dict,
+        "run.log": log_text,
     }
     if dry_run_result:
         extra["dry_run_result.json"] = dry_run_result

@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "examples/clean_manifest.json",
+    "output": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\zyx-00098-review-a02\\export_bundle",
+    "format": "zip",
+    "no_dryrun": false,
+    "seed": 123,
+    "func": "<function _run at 0x00000185C0B79220>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612024711-0afd4981"
+}

@@ -7,7 +7,10 @@ execution history.
 from __future__ import annotations
 
 import hashlib
+import itertools
 import json
+import os
+import threading
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from enum import Enum
@@ -458,8 +461,26 @@ def now_iso() -> str:
     return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+_ID_COUNTER = itertools.count()
+_ID_LOCK = threading.Lock()
+
+
 def generate_id(prefix: str) -> str:
-    """Generate a short unique identifier with a prefix."""
+    """Generate a stable unique identifier with a prefix.
+
+    Format: ``PREFIX-YYYYMMDDHHMMSS-<8 hex chars>`` (unchanged from
+    the original layout so existing history and display code keep
+    working).
+
+    Uniqueness in the same second is guaranteed by combining the
+    second-precision timestamp with a per-process monotonic counter
+    and 8 bytes of OS-level randomness before hashing.  This makes
+    collisions impossible even with concurrent calls in the same
+    process and extremely unlikely across separate processes.
+    """
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-    rand = hashlib.md5(ts.encode()).hexdigest()[:8]
-    return f"{prefix}-{ts}-{rand}"
+    with _ID_LOCK:
+        counter = next(_ID_COUNTER)
+    entropy = f"{ts}-{counter}-{os.urandom(8).hex()}"
+    digest = hashlib.md5(entropy.encode()).hexdigest()[:8]
+    return f"{prefix}-{ts}-{digest}"

@@ -1,0 +1,13 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "dry-run",
+    "manifest": "examples/sample_manifest.json",
+    "seed": null,
+    "fail_step": null,
+    "func": "<function _run at 0x000002422200C7D0>"
+  },
+  "command": "dry-run",
+  "run_id": "RUN-20260612020905-4160e2cc"
+}

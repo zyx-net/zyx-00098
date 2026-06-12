@@ -1,0 +1,54 @@
+{
+  "run_id": "RUN-20260612024407-70e89bdb",
+  "command": "validate",
+  "started_at": "2026-06-12T02:44:07Z",
+  "finished_at": "2026-06-12T02:44:07Z",
+  "exit_code": 10,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "validate",
+      "manifest": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\zyx-00098-review-a02\\reviewer_missing_approval.json",
+      "no_checksum": false,
+      "strict": false,
+      "func": "<function _run at 0x000001DA38797270>"
+    },
+    "command": "validate",
+    "run_id": "RUN-20260612024407-70e89bdb"
+  },
+  "manifest_snapshot": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T02:44:07Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[validate] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612024407-70e89bdb"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T02:44:07Z",
+      "level": "ERROR",
+      "module": "cmd.validate",
+      "message": "Invalid manifest: Invalid manifest JSON: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T02:44:07Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[validate] Finished",
+      "extra": {
+        "run_id": "RUN-20260612024407-70e89bdb",
+        "exit_code": 10
+      }
+    }
+  ],
+  "archive_path": null
+}

@@ -1,0 +1,47 @@
+{
+  "run_id": "RUN-20260612034445-8ac09141",
+  "command": "history",
+  "started_at": "2026-06-12T03:44:45Z",
+  "finished_at": "2026-06-12T03:44:45Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": null,
+      "limit": 20,
+      "show": "RUN-20260612034402-45b1fd4a",
+      "show_logs": false,
+      "func": "<function _run at 0x0000029CF39394E0>"
+    },
+    "command": "history",
+    "run_id": "RUN-20260612034445-8ac09141"
+  },
+  "manifest_snapshot": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T03:44:45Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[history] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612034445-8ac09141"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T03:44:45Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[history] Finished",
+      "extra": {
+        "run_id": "RUN-20260612034445-8ac09141",
+        "exit_code": 0
+      }
+    }
+  ],
+  "archive_path": null
+}

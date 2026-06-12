@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-06-12T02:44:08Z",
+  "passed": false,
+  "issues": [
+    {
+      "component": "svc-a",
+      "severity": "error",
+      "issue_code": "CIRCULAR_DEPENDENCY",
+      "message": "Circular dependency detected: svc-a -> svc-b -> svc-c -> svc-a",
+      "details": {
+        "cycle": [
+          "svc-a",
+          "svc-b",
+          "svc-c",
+          "svc-a"
+        ]
+      }
+    },
+    {
+      "component": "svc-a",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for svc-a",
+      "details": null
+    },
+    {
+      "component": "svc-b",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for svc-b",
+      "details": null
+    },
+    {
+      "component": "svc-c",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for svc-c",
+      "details": null
+    },
+    {
+      "component": "svc-a",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component svc-a approved by: approver-a@corp.com",
+      "details": {
+        "approvers": [
+          "approver-a@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "svc-b",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component svc-b approved by: approver-b@corp.com",
+      "details": {
+        "approvers": [
+          "approver-b@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "svc-c",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component svc-c approved by: approver-c@corp.com",
+      "details": {
+        "approvers": [
+          "approver-c@corp.com"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 6
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+    "output": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\codex-zyx-00098-review\\codex_review_bundle",
+    "format": "zip",
+    "no_dryrun": false,
+    "seed": 321,
+    "func": "<function _run at 0x000001EE28D09220>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612033417-32f02d5b"
+}
