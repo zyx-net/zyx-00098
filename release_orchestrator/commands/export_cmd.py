@@ -9,6 +9,7 @@ from ..core.compare import compare_snapshots
 from ..core.dryrun import DryRunExecutor
 from ..core.planner import ReleasePlanner
 from ..core.rollback import RollbackPlanner
+from ..core.scheduler import SchedulingEngine, load_waves_from_json, load_windows_from_csv, load_windows_from_json
 from ..core.validator import ValidationEngine
 from ..utils.exit_codes import (
     EXIT_CONFIG_ERROR,
@@ -45,6 +46,10 @@ def add_parser(subparsers: "argparse._SubParsersAction") -> None:
                    help="Random seed for dry-run simulation")
     p.add_argument("--compare-with", default=None, metavar="RUN_ID",
                    help="Include a compare_report.json comparing against the given historical run")
+    p.add_argument("-w", "--windows", default=None,
+                   help="Path to windows configuration (JSON or CSV) for scheduling")
+    p.add_argument("--waves", default=None,
+                   help="Path to waves configuration JSON for scheduling")
     p.set_defaults(func=_run)
 
 
@@ -84,6 +89,62 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
 
     rollback = RollbackPlanner(manifest, plan).generate()
     rollback_dict = rollback.to_dict()
+
+    schedule_dict = None
+    schedule_summary = None
+    if args.windows:
+        try:
+            if args.windows.lower().endswith(".csv"):
+                windows = load_windows_from_csv(args.windows)
+            else:
+                windows = load_windows_from_json(args.windows)
+        except FileNotFoundError:
+            LOG.error(MODULE, f"Windows config not found: {args.windows}")
+            print(f"ERROR: Windows config not found: {args.windows}")
+            return CommandResult(
+                exit_code=EXIT_FILE_NOT_FOUND.code,
+                run_id="",
+                manifest_snapshot=manifest.to_dict(),
+                validation_result=validation_dict,
+                release_plan=plan_dict,
+                rollback_plan=rollback_dict,
+                extra_artifacts={"policy_snapshot": policy_dict},
+            )
+        except ValueError as exc:
+            LOG.error(MODULE, f"Invalid windows config: {exc}")
+            print(f"ERROR: Invalid windows config: {exc}")
+            return CommandResult(
+                exit_code=EXIT_CONFIG_ERROR.code,
+                run_id="",
+                manifest_snapshot=manifest.to_dict(),
+                validation_result=validation_dict,
+                release_plan=plan_dict,
+                rollback_plan=rollback_dict,
+                extra_artifacts={"policy_snapshot": policy_dict},
+            )
+
+        waves = None
+        if args.waves:
+            try:
+                waves = load_waves_from_json(args.waves)
+            except FileNotFoundError:
+                LOG.error(MODULE, f"Waves config not found: {args.waves}")
+                print(f"ERROR: Waves config not found: {args.waves}")
+                return CommandResult(
+                    exit_code=EXIT_FILE_NOT_FOUND.code,
+                    run_id="",
+                    manifest_snapshot=manifest.to_dict(),
+                    validation_result=validation_dict,
+                    release_plan=plan_dict,
+                    rollback_plan=rollback_dict,
+                    extra_artifacts={"policy_snapshot": policy_dict},
+                )
+
+        scheduler = SchedulingEngine(manifest, windows, waves, policy, validation)
+        schedule_result = scheduler.schedule()
+        schedule_dict = schedule_result.to_dict()
+        from .schedule_cmd import _format_schedule_summary
+        schedule_summary = _format_schedule_summary(schedule_result)
 
     dry_run_result = None
     dry_run_failed = False
@@ -141,6 +202,10 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
     }
     if dry_run_result:
         extra["dry_run_result.json"] = dry_run_result
+    if schedule_dict:
+        extra["schedule.json"] = schedule_dict
+    if schedule_summary:
+        extra["schedule_summary.md"] = schedule_summary
 
     compare_report = None
     if args.compare_with:
@@ -195,6 +260,11 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
         )
     except Exception as exc:
         LOG.error(MODULE, f"Export failed: {exc}")
+        extra_err = {"policy_snapshot": policy_dict}
+        if schedule_dict:
+            extra_err["schedule_result"] = schedule_dict
+        if schedule_summary:
+            extra_err["schedule_summary"] = schedule_summary
         return CommandResult(
             exit_code=EXIT_EXPORT_ERROR.code,
             run_id="",
@@ -203,7 +273,9 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
             release_plan=plan_dict,
             rollback_plan=rollback_dict,
             dry_run_result=dry_run_result,
-            extra_artifacts={"policy_snapshot": policy_dict},
+            schedule_result=schedule_dict,
+            schedule_summary=schedule_summary,
+            extra_artifacts=extra_err,
         )
 
     print(f"\n=== Export Complete ===")
@@ -232,6 +304,10 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
     }
     if compare_report:
         extra_artifacts["compare_report"] = compare_report
+    if schedule_dict:
+        extra_artifacts["schedule_result"] = schedule_dict
+    if schedule_summary:
+        extra_artifacts["schedule_summary"] = schedule_summary
 
     return CommandResult(
         exit_code=exit_code,
@@ -241,5 +317,7 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
         release_plan=plan_dict,
         rollback_plan=rollback_dict,
         dry_run_result=dry_run_result,
+        schedule_result=schedule_dict,
+        schedule_summary=schedule_summary,
         extra_artifacts=extra_artifacts,
     )

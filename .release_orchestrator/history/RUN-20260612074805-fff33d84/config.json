@@ -1,0 +1,17 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "schedule",
+    "limit": 20,
+    "show": null,
+    "show_logs": false,
+    "as_json": true,
+    "compare": null,
+    "run_a": null,
+    "run_b": null,
+    "func": "<function _run at 0x000001E68DB3CCA0>"
+  },
+  "command": "schedule",
+  "run_id": "RUN-20260612074805-fff33d84"
+}

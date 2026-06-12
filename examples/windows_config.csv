@@ -1,0 +1,5 @@
+window_id,name,start_time,end_time,timezone,capacity_max,allowed_environments,required_approval_roles,freeze_periods,locked,locked_by,locked_at,description,tags
+WIN-2026-JUN-W1,June Week 1 - Business Hours,2026-06-15T09:00:00Z,2026-06-15T17:00:00Z,UTC,3,"staging,production",,,false,,,Standard business hours release window for week 1,"standard,business-hours"
+WIN-2026-JUN-W2,June Week 2 - Extended,2026-06-22T08:00:00Z,2026-06-22T20:00:00Z,UTC,5,"staging,production",,"Black Friday Eve|2026-06-22T12:00:00Z|2026-06-22T13:00:00Z|Quarter-end review moratorium",false,,,Extended release window for larger batches,"extended,high-capacity"
+WIN-2026-JUN-DEV,June - Dev Continuous,2026-06-01T00:00:00Z,2026-06-30T23:59:59Z,UTC,,"dev,test",,,false,,,Continuous deployment window for dev and test,"continuous,dev-only"
+

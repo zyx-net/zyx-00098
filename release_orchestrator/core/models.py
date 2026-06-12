@@ -389,6 +389,7 @@ class ExecutionSnapshot:
     release_plan: Optional[Dict[str, Any]] = None
     rollback_plan: Optional[Dict[str, Any]] = None
     dry_run_result: Optional[Dict[str, Any]] = None
+    schedule_result: Optional[Dict[str, Any]] = None
     logs: List[Dict[str, Any]] = field(default_factory=list)
     archive_path: Optional[str] = None
 
@@ -411,6 +412,7 @@ class ExecutionSnapshot:
             release_plan=data.get("release_plan"),
             rollback_plan=data.get("rollback_plan"),
             dry_run_result=data.get("dry_run_result"),
+            schedule_result=data.get("schedule_result"),
             logs=data.get("logs", []),
             archive_path=data.get("archive_path"),
         )
@@ -488,3 +490,211 @@ def generate_id(prefix: str) -> str:
     entropy = f"{ts}-{counter}-{os.urandom(8).hex()}"
     digest = hashlib.md5(entropy.encode()).hexdigest()[:8]
     return f"{prefix}-{ts}-{digest}"
+
+
+@dataclass
+class FreezePeriod:
+    """A period during which releases are not allowed in a window."""
+
+    name: str
+    start: str
+    end: str
+    reason: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "FreezePeriod":
+        return cls(
+            name=data["name"],
+            start=data["start"],
+            end=data["end"],
+            reason=data.get("reason"),
+        )
+
+
+@dataclass
+class ReleaseWindow:
+    """A scheduled release window with capacity and constraints."""
+
+    window_id: str
+    name: str
+    start_time: str
+    end_time: str
+    timezone: str = "UTC"
+    capacity_max: Optional[int] = None
+    allowed_environments: List[str] = field(default_factory=list)
+    required_approval_roles: List[str] = field(default_factory=list)
+    freeze_periods: List[FreezePeriod] = field(default_factory=list)
+    locked: bool = False
+    locked_by: Optional[str] = None
+    locked_at: Optional[str] = None
+    description: Optional[str] = None
+    tags: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["freeze_periods"] = [fp.to_dict() if isinstance(fp, FreezePeriod) else fp for fp in self.freeze_periods]
+        return d
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ReleaseWindow":
+        freeze_periods = [
+            FreezePeriod.from_dict(fp) if isinstance(fp, dict) else fp
+            for fp in data.get("freeze_periods", [])
+        ]
+        return cls(
+            window_id=data["window_id"],
+            name=data["name"],
+            start_time=data["start_time"],
+            end_time=data["end_time"],
+            timezone=data.get("timezone", "UTC"),
+            capacity_max=data.get("capacity_max"),
+            allowed_environments=list(data.get("allowed_environments", [])),
+            required_approval_roles=list(data.get("required_approval_roles", [])),
+            freeze_periods=freeze_periods,
+            locked=bool(data.get("locked", False)),
+            locked_by=data.get("locked_by"),
+            locked_at=data.get("locked_at"),
+            description=data.get("description"),
+            tags=list(data.get("tags", [])),
+        )
+
+
+@dataclass
+class Wave:
+    """A release wave - a group of components released together."""
+
+    wave_id: str
+    name: str
+    order: int = 0
+    description: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Wave":
+        return cls(
+            wave_id=data["wave_id"],
+            name=data["name"],
+            order=int(data.get("order", 0)),
+            description=data.get("description"),
+        )
+
+
+@dataclass
+class ScheduleEntry:
+    """A single component scheduled into a window and wave."""
+
+    component_name: str
+    component_version: str
+    window_id: str
+    wave_id: Optional[str] = None
+    scheduled_start: Optional[str] = None
+    status: ComponentStatus = ComponentStatus.SCHEDULED
+    reasons: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["status"] = self.status.value if isinstance(self.status, ComponentStatus) else self.status
+        return d
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ScheduleEntry":
+        status = data.get("status")
+        if isinstance(status, str):
+            status = ComponentStatus(status)
+        return cls(
+            component_name=data["component_name"],
+            component_version=data["component_version"],
+            window_id=data["window_id"],
+            wave_id=data.get("wave_id"),
+            scheduled_start=data.get("scheduled_start"),
+            status=status,
+            reasons=list(data.get("reasons", [])),
+        )
+
+
+@dataclass
+class ScheduleIssue:
+    """An issue encountered during scheduling."""
+
+    component: Optional[str]
+    severity: Severity
+    issue_code: str
+    message: str
+    details: Optional[Dict[str, Any]] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["severity"] = self.severity.value if isinstance(self.severity, Severity) else self.severity
+        return d
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ScheduleIssue":
+        sev = data.get("severity")
+        if isinstance(sev, str):
+            sev = Severity(sev)
+        return cls(
+            component=data.get("component"),
+            severity=sev,
+            issue_code=data["issue_code"],
+            message=data["message"],
+            details=data.get("details"),
+        )
+
+
+@dataclass
+class ScheduleResult:
+    """Result of a scheduling operation."""
+
+    schedule_id: str
+    generated_at: str
+    windows: List[ReleaseWindow] = field(default_factory=list)
+    waves: List[Wave] = field(default_factory=list)
+    entries: List[ScheduleEntry] = field(default_factory=list)
+    issues: List[ScheduleIssue] = field(default_factory=list)
+    unscheduled_components: List[Dict[str, Any]] = field(default_factory=list)
+    total_scheduled: int = 0
+    total_unscheduled: int = 0
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "schedule_id": self.schedule_id,
+            "generated_at": self.generated_at,
+            "windows": [w.to_dict() for w in self.windows],
+            "waves": [w.to_dict() for w in self.waves],
+            "entries": [e.to_dict() for e in self.entries],
+            "issues": [i.to_dict() for i in self.issues],
+            "unscheduled_components": self.unscheduled_components,
+            "total_scheduled": self.total_scheduled,
+            "total_unscheduled": self.total_unscheduled,
+            "summary": {
+                "windows": len(self.windows),
+                "waves": len(self.waves),
+                "scheduled": self.total_scheduled,
+                "unscheduled": self.total_unscheduled,
+                "errors": len([i for i in self.issues if i.severity == Severity.ERROR]),
+                "warnings": len([i for i in self.issues if i.severity == Severity.WARNING]),
+            },
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ScheduleResult":
+        windows = [ReleaseWindow.from_dict(w) if isinstance(w, dict) else w for w in data.get("windows", [])]
+        waves = [Wave.from_dict(w) if isinstance(w, dict) else w for w in data.get("waves", [])]
+        entries = [ScheduleEntry.from_dict(e) if isinstance(e, dict) else e for e in data.get("entries", [])]
+        issues = [ScheduleIssue.from_dict(i) if isinstance(i, dict) else i for i in data.get("issues", [])]
+        return cls(
+            schedule_id=data["schedule_id"],
+            generated_at=data["generated_at"],
+            windows=windows,
+            waves=waves,
+            entries=entries,
+            issues=issues,
+            unscheduled_components=list(data.get("unscheduled_components", [])),
+            total_scheduled=int(data.get("total_scheduled", 0)),
+            total_unscheduled=int(data.get("total_unscheduled", 0)),
+        )

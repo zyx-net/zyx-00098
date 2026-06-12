@@ -1,0 +1,79 @@
+{
+  "run_id": "RUN-20260612074927-a4836602",
+  "command": "schedule",
+  "started_at": "2026-06-12T07:49:27Z",
+  "finished_at": "2026-06-12T07:49:27Z",
+  "exit_code": 10,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "schedule",
+      "manifest": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\review_manifest_with_windows.json",
+      "policy": null,
+      "windows": null,
+      "waves": null,
+      "output": null,
+      "lock": null,
+      "unlock": null,
+      "by": "admin@corp.com",
+      "skip_validate": false,
+      "func": "<function _run at 0x0000022DB29BD380>"
+    },
+    "command": "schedule",
+    "run_id": "RUN-20260612074927-a4836602"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T07:49:27Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[schedule] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612074927-a4836602"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T07:49:27Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from C:\\Users\\admin\\AppData\\Local\\Temp\\1\\review_manifest_with_windows.json",
+      "extra": {
+        "components": 4
+      }
+    },
+    {
+      "timestamp": "2026-06-12T07:49:27Z",
+      "level": "INFO",
+      "module": "policy_loader",
+      "message": "No policy file found - using built-in defaults",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T07:49:27Z",
+      "level": "ERROR",
+      "module": "cmd.schedule",
+      "message": "No windows configured for scheduling",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T07:49:27Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[schedule] Finished",
+      "extra": {
+        "run_id": "RUN-20260612074927-a4836602",
+        "exit_code": 10
+      }
+    }
+  ],
+  "archive_path": null
+}

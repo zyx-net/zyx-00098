@@ -27,6 +27,8 @@ class CommandResult:
     release_plan: Optional[Dict[str, Any]] = None
     rollback_plan: Optional[Dict[str, Any]] = None
     dry_run_result: Optional[Dict[str, Any]] = None
+    schedule_result: Optional[Dict[str, Any]] = None
+    schedule_summary: Optional[str] = None
     config_snapshot: Optional[Dict[str, Any]] = None
     extra_artifacts: Optional[Dict[str, Any]] = None
 
@@ -65,6 +67,14 @@ def run_with_snapshot(
     extra = result.extra_artifacts or {}
     policy_snapshot = extra.get("policy_snapshot")
     policy_summary = extra.get("policy_summary")
+
+    schedule_result = result.schedule_result
+    schedule_summary = result.schedule_summary
+    if schedule_result is None and "schedule_result" in extra:
+        schedule_result = extra["schedule_result"]
+    if schedule_summary is None and "schedule_summary" in extra:
+        schedule_summary = extra["schedule_summary"]
+
     persist_run_artifacts(
         run_id=run_id,
         command=command_name,
@@ -78,6 +88,8 @@ def run_with_snapshot(
         release_plan=result.release_plan,
         rollback_plan=result.rollback_plan,
         dry_run_result=result.dry_run_result,
+        schedule_result=schedule_result,
+        schedule_summary=schedule_summary,
         logs_text=logger.get_text(),
         logs_entries=logger.get_entries(),
         base=work_base or getattr(args, "work_dir", None),

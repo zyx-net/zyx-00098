@@ -1,0 +1,14 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "init",
+    "output": "examples/clean_manifest.json",
+    "clean": true,
+    "no_errors": true,
+    "env": "staging",
+    "func": "<function _run at 0x0000021F265F8BF0>"
+  },
+  "command": "init",
+  "run_id": "RUN-20260612072519-ceea7c85"
+}

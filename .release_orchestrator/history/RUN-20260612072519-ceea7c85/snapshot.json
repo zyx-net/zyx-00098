@@ -1,0 +1,224 @@
+{
+  "run_id": "RUN-20260612072519-ceea7c85",
+  "command": "init",
+  "started_at": "2026-06-12T07:25:19Z",
+  "finished_at": "2026-06-12T07:25:19Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "init",
+      "output": "examples/clean_manifest.json",
+      "clean": true,
+      "no_errors": true,
+      "env": "staging",
+      "func": "<function _run at 0x0000021F265F8BF0>"
+    },
+    "command": "init",
+    "run_id": "RUN-20260612072519-ceea7c85"
+  },
+  "manifest_snapshot": {
+    "manifest_version": "1.0",
+    "release_id": "REL-20260612072519-65051956",
+    "title": "Q3 Offline Release Bundle",
+    "target_environment": "staging",
+    "scheduled_date": "2026-06-13",
+    "components": [
+      {
+        "name": "common-utils",
+        "version": "2.3.1",
+        "environment": "staging",
+        "artifact": {
+          "path": "examples\\artifacts\\common-utils-2.3.1.pkg",
+          "checksum": "5326bbfabb57c6ef8f126d32b85dc449e711ba5df4d0bf84141b88eb0d7d7733",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 28
+        },
+        "dependencies": [],
+        "approvals": [
+          {
+            "approver": "alice@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-07T07:25:19Z",
+            "comment": "Approved by alice@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "2.2.0",
+        "description": "Shared utilities library - base dependency for all services.",
+        "rollback_target_version": "2.2.0",
+        "tags": [
+          "shared",
+          "libs"
+        ]
+      },
+      {
+        "name": "auth-service",
+        "version": "1.5.0",
+        "environment": "staging",
+        "artifact": {
+          "path": "examples\\artifacts\\auth-service-1.5.0.pkg",
+          "checksum": "cde54063b74d99da85d0101c046a0c82b01904fbe96d11341358e3fa965ed75d",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 28
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "2.3.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "bob@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-09T07:25:19Z",
+            "comment": "Approved by bob@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "1.4.2",
+        "description": "Authentication and SSO service.",
+        "rollback_target_version": "1.4.2",
+        "tags": [
+          "core",
+          "security"
+        ]
+      },
+      {
+        "name": "order-service",
+        "version": "3.1.0",
+        "environment": "staging",
+        "artifact": {
+          "path": "examples\\artifacts\\order-service-3.1.0.pkg",
+          "checksum": "345471e034b3650a46a17765d762a5c8eb6f26a6fb5c051f67dac29a4f97129a",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 29
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "2.3.0",
+            "max_version": null,
+            "required": true
+          },
+          {
+            "name": "auth-service",
+            "min_version": "1.5.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "carol@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-11T07:25:19Z",
+            "comment": "Approved by carol@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "3.0.4",
+        "description": "Order management micro-service.",
+        "rollback_target_version": "3.0.4",
+        "tags": [
+          "business"
+        ]
+      },
+      {
+        "name": "payment-service",
+        "version": "2.0.2",
+        "environment": "staging",
+        "artifact": {
+          "path": "examples\\artifacts\\payment-service-2.0.2.pkg",
+          "checksum": "0352801879459dbefc57b30d01583803db81cfbe1584597f773d4c7d99b21680",
+          "checksum_algorithm": "sha256",
+          "size_bytes": 31
+        },
+        "dependencies": [
+          {
+            "name": "common-utils",
+            "min_version": "2.2.0",
+            "max_version": null,
+            "required": true
+          },
+          {
+            "name": "order-service",
+            "min_version": "3.0.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "dave@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-11T07:25:19Z",
+            "comment": "Approved by dave@corp.com via offline review."
+          }
+        ],
+        "deployed_version": "2.0.1",
+        "description": "Payment processing service (PCI-DSS compliant).",
+        "rollback_target_version": "2.0.1",
+        "tags": [
+          "pci",
+          "payment"
+        ]
+      }
+    ],
+    "description": "Sample offline release manifest generated by `release-orchestrator init`.",
+    "created_by": "release-orchestrator",
+    "created_at": "2026-06-12T07:25:19Z"
+  },
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T07:25:19Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[init] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612072519-ceea7c85"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T07:25:19Z",
+      "level": "INFO",
+      "module": "samples",
+      "message": "Sample manifest generated",
+      "extra": {
+        "path": "examples\\clean_manifest.json",
+        "components": 4,
+        "artifacts_dir": "examples\\artifacts"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T07:25:19Z",
+      "level": "INFO",
+      "module": "cmd.init",
+      "message": "Sample manifest generated successfully",
+      "extra": {
+        "path": "examples\\clean_manifest.json",
+        "components": 4,
+        "artifacts_dir": "examples\\artifacts"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T07:25:19Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[init] Finished",
+      "extra": {
+        "run_id": "RUN-20260612072519-ceea7c85",
+        "exit_code": 0
+      }
+    }
+  ],
+  "archive_path": null
+}

@@ -1,0 +1,14 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "plan",
+    "manifest": "examples/clean_manifest.json",
+    "policy": null,
+    "output": "reviewer_inputs\\reviewer_plan.json",
+    "skip_validate": false,
+    "func": "<function _run at 0x000002A683A1CA90>"
+  },
+  "command": "plan",
+  "run_id": "RUN-20260612074805-72d87693"
+}

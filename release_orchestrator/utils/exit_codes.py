@@ -60,6 +60,18 @@ EXIT_DRYRUN_FAILED = ExitCode(
     16, "EXIT_DRYRUN_FAILED",
     "Dry-run simulation detected issues during simulated execution."
 )
+EXIT_SCHEDULE_ERROR = ExitCode(
+    17, "EXIT_SCHEDULE_ERROR",
+    "Failed to schedule components into release windows."
+)
+EXIT_WINDOW_LOCKED = ExitCode(
+    18, "EXIT_WINDOW_LOCKED",
+    "Cannot schedule into a locked release window."
+)
+EXIT_WINDOW_FROZEN = ExitCode(
+    19, "EXIT_WINDOW_FROZEN",
+    "Target date falls within a freeze period."
+)
 EXIT_UNKNOWN_COMMAND = ExitCode(
     20, "EXIT_UNKNOWN_COMMAND",
     "Unknown or invalid command specified."
@@ -83,6 +95,9 @@ ALL_EXIT_CODES = [
     EXIT_EXPORT_ERROR,
     EXIT_HISTORY_ERROR,
     EXIT_DRYRUN_FAILED,
+    EXIT_SCHEDULE_ERROR,
+    EXIT_WINDOW_LOCKED,
+    EXIT_WINDOW_FROZEN,
     EXIT_UNKNOWN_COMMAND,
     EXIT_INTERNAL_ERROR,
 ]

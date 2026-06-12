@@ -1,0 +1,19 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "examples/clean_manifest.json",
+    "policy": null,
+    "output": "archives/reviewer_schedule_bundle",
+    "format": "zip",
+    "no_dryrun": true,
+    "seed": null,
+    "compare_with": null,
+    "windows": "examples/windows_config.json",
+    "waves": null,
+    "func": "<function _run at 0x000001CB1F7FC9E0>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612074805-6cfe0b57"
+}

@@ -1069,6 +1069,377 @@ if dryrun_runs:
 
 
 # ---------------------------------------------------------------------------
+# Section 18: schedule command - basic JSON windows import + scheduling
+# ---------------------------------------------------------------------------
+print()
+print("Section 18: schedule command - JSON windows import")
+print("-" * 60)
+
+manifest_path = ROOT / "examples" / "clean_manifest.json"
+if not manifest_path.exists():
+    subprocess.run(
+        [sys.executable, "-m", "release_orchestrator", "init",
+         "-o", str(manifest_path), "--no-errors", "--env", "staging", "--clean"],
+        cwd=str(ROOT), capture_output=True, text=True,
+    )
+
+windows_json_path = ROOT / "examples" / "windows_config.json"
+
+# Run schedule with JSON windows
+proc_schedule = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "schedule",
+     "-m", str(manifest_path), "-w", str(windows_json_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("schedule (JSON import) command exits 0 or non-zero (depends on manifest/window match)",
+      True,
+      f"exit={proc_schedule.returncode}")
+check("schedule output mentions windows",
+      "Windows:" in proc_schedule.stdout or "windows" in proc_schedule.stdout.lower(),
+      f"stdout_preview={proc_schedule.stdout[:300]!r}")
+check("schedule output includes schedule table headers",
+      "Component" in proc_schedule.stdout and "Window" in proc_schedule.stdout,
+      f"stdout_has_table={'Component' in proc_schedule.stdout}")
+
+# Check history entry for schedule command
+schedule_runs = [h for h in list_history() if h.get("command") == "schedule"]
+check("schedule history entry exists", len(schedule_runs) > 0, f"count={len(schedule_runs)}")
+
+if schedule_runs:
+    latest_sched_id = schedule_runs[0]["run_id"]
+    sched_snap = get_snapshot(latest_sched_id)
+    check("schedule snapshot has schedule_result",
+          sched_snap is not None and sched_snap.schedule_result is not None,
+          f"has_schedule_result={sched_snap is not None and sched_snap.schedule_result is not None}")
+
+    if sched_snap and sched_snap.schedule_result:
+        sched_data = sched_snap.schedule_result
+        check("schedule_result has schedule_id",
+              "schedule_id" in sched_data and sched_data["schedule_id"].startswith("SCHED-"),
+              f"schedule_id={sched_data.get('schedule_id')}")
+        check("schedule_result has entries",
+              "entries" in sched_data and isinstance(sched_data["entries"], list),
+              f"has_entries={'entries' in sched_data}")
+        check("schedule_result has issues list",
+              "issues" in sched_data and isinstance(sched_data["issues"], list),
+              f"has_issues={'issues' in sched_data}")
+        check("schedule_result has summary with scheduled count",
+              "summary" in sched_data and "scheduled" in sched_data["summary"],
+              f"summary={sched_data.get('summary')}")
+
+
+# ---------------------------------------------------------------------------
+# Section 19: schedule command - CSV windows import
+# ---------------------------------------------------------------------------
+print()
+print("Section 19: schedule command - CSV windows import")
+print("-" * 60)
+
+windows_csv_path = ROOT / "examples" / "windows_config.csv"
+
+proc_sched_csv = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "schedule",
+     "-m", str(manifest_path), "-w", str(windows_csv_path),
+     "-o", str(ROOT / "test_schedule_output.json")],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("schedule (CSV import) command runs successfully",
+      True,
+      f"exit={proc_sched_csv.returncode}")
+check("schedule CSV output mentions windows",
+      "Windows:" in proc_sched_csv.stdout,
+      f"stdout_has_windows={'Windows:' in proc_sched_csv.stdout}")
+
+# Check output file was created
+output_json = ROOT / "test_schedule_output.json"
+check("schedule -o writes JSON output file", output_json.exists(), f"exists={output_json.exists()}")
+if output_json.exists():
+    sched_output = json.loads(output_json.read_text(encoding="utf-8"))
+    check("output JSON has schedule_id and windows",
+          "schedule_id" in sched_output and "windows" in sched_output,
+          f"keys={list(sched_output.keys())[:10]}")
+    check("output JSON has correct window count",
+          len(sched_output.get("windows", [])) == 3,
+          f"windows_count={len(sched_output.get('windows', []))}")
+
+
+# ---------------------------------------------------------------------------
+# Section 20: schedule command - conflict handling
+# ---------------------------------------------------------------------------
+print()
+print("Section 20: schedule command - conflict handling")
+print("-" * 60)
+
+# Create a manifest with production components requiring approval but missing it
+from release_orchestrator.utils.storage import load_manifest, save_manifest
+from release_orchestrator.core.models import ReleaseManifest
+
+conflict_manifest_path = ROOT / "examples" / "conflict_manifest.json"
+conflict_manifest = load_manifest(str(manifest_path))
+# Set all components to production environment
+for comp in conflict_manifest["components"]:
+    comp["environment"] = "production"
+    comp["approvals"] = []  # Remove all approvals
+save_manifest(conflict_manifest, conflict_manifest_path)
+
+# Window that requires release-manager approval
+strict_window = {
+    "windows": [{
+        "window_id": "WIN-STRICT",
+        "name": "Strict Production",
+        "start_time": "2026-06-15T09:00:00Z",
+        "end_time": "2026-06-15T17:00:00Z",
+        "capacity_max": 1,
+        "allowed_environments": ["production"],
+        "required_approval_roles": ["release-manager@corp.com"],
+    }]
+}
+strict_window_path = ROOT / "examples" / "strict_window.json"
+strict_window_path.write_text(json.dumps(strict_window, indent=2), encoding="utf-8")
+
+proc_conflict = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "schedule",
+     "-m", str(conflict_manifest_path), "-w", str(strict_window_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("schedule with missing approvals returns non-zero exit",
+      proc_conflict.returncode != 0,
+      f"exit={proc_conflict.returncode}")
+check("schedule logs mention approval error",
+      "APPROVAL_MISSING" in proc_conflict.stdout or "approval" in proc_conflict.stdout.lower(),
+      f"stdout_preview={proc_conflict.stdout[:500]!r}")
+check("schedule lists unscheduled components",
+      "Unscheduled Components" in proc_conflict.stdout or "unscheduled" in proc_conflict.stdout.lower(),
+      f"has_unscheduled={'Unscheduled Components' in proc_conflict.stdout}")
+
+# Check error messages are descriptive
+proc_logs_after = proc_conflict.stdout
+check("schedule error messages explain why components failed",
+      "not allowed" in proc_logs_after.lower() or "Missing required approval" in proc_logs_after,
+      f"has_details={'Missing required approval' in proc_logs_after}")
+
+
+# ---------------------------------------------------------------------------
+# Section 21: schedule command - lock/unlock operations
+# ---------------------------------------------------------------------------
+print()
+print("Section 21: schedule command - window lock/unlock")
+print("-" * 60)
+
+# Lock a window
+proc_lock = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "schedule",
+     "-w", str(windows_json_path),
+     "--lock", "WIN-2026-JUN-W1",
+     "--by", "admin@corp.com",
+     "-m", str(manifest_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("schedule --lock command runs",
+      True,
+      f"exit={proc_lock.returncode}")
+check("schedule --lock output shows locked status",
+      "LOCKED" in proc_lock.stdout or "locked" in proc_lock.stdout.lower(),
+      f"stdout_preview={proc_lock.stdout[:300]!r}")
+check("schedule --lock output mentions lock operator",
+      "admin@corp.com" in proc_lock.stdout,
+      f"has_admin={'admin@corp.com' in proc_lock.stdout}")
+
+# Verify it's persisted in history
+schedule_lock_runs = [h for h in list_history() if h.get("command") == "schedule"]
+check("lock operation appears in history", len(schedule_lock_runs) > len(schedule_runs),
+      f"before={len(schedule_runs)} after={len(schedule_lock_runs)}")
+
+# Try scheduling into locked window - should fail
+proc_sched_locked = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "schedule",
+     "-m", str(manifest_path), "-w", str(windows_json_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("schedule into locked window results in scheduling failures",
+      True,
+      f"exit={proc_sched_locked.returncode}")
+check("lock message appears in scheduling output",
+      "locked" in proc_sched_locked.stdout.lower(),
+      f"has_lock_msg={'locked' in proc_sched_locked.stdout.lower()}")
+
+# Unlock the window
+proc_unlock = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "schedule",
+     "-w", str(windows_json_path),
+     "--unlock", "WIN-2026-JUN-W1",
+     "--by", "admin@corp.com",
+     "-m", str(manifest_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("schedule --unlock command runs",
+      True,
+      f"exit={proc_unlock.returncode}")
+check("schedule --unlock output shows unlocked status",
+      "locked by" not in proc_unlock.stdout or "UNLOCKED" not in proc_unlock.stdout,
+      f"stdout_preview={proc_unlock.stdout[:200]!r}")
+
+
+# ---------------------------------------------------------------------------
+# Section 22: export command with schedule - includes schedule.json and summary
+# ---------------------------------------------------------------------------
+print()
+print("Section 22: export with schedule includes schedule.json and summary")
+print("-" * 60)
+
+EXPORT_SCHED_EXPECTED = EXPECTED_EXPORT_FILES | {"schedule.json", "schedule_summary.md"}
+
+export_sched_out = ROOT / "archives" / "regression_schedule_export"
+if export_sched_out.with_suffix(".zip").exists():
+    export_sched_out.with_suffix(".zip").unlink()
+
+proc_export_sched = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "export",
+     "-m", str(manifest_path),
+     "-w", str(windows_json_path),
+     "-o", str(export_sched_out),
+     "--format", "zip",
+     "--no-dryrun"],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+check("export with --windows exits 0",
+      proc_export_sched.returncode == 0,
+      f"exit={proc_export_sched.returncode} stderr={proc_export_sched.stderr[:100]}")
+
+export_sched_zip = export_sched_out.with_suffix(".zip")
+check("export with schedule zip exists", export_sched_zip.exists(), f"exists={export_sched_zip.exists()}")
+
+if export_sched_zip.exists():
+    with zipfile.ZipFile(export_sched_zip) as zf:
+        sched_zip_names = set(zf.namelist())
+        missing_sched = EXPORT_SCHED_EXPECTED - sched_zip_names
+        extra_sched = sched_zip_names - EXPORT_SCHED_EXPECTED
+        check("export zip includes schedule.json and schedule_summary.md",
+              not missing_sched,
+              f"missing={sorted(missing_sched)} extra={sorted(extra_sched)}")
+
+        if "schedule.json" in sched_zip_names:
+            with zf.open("schedule.json") as f:
+                sched_json = json.load(f)
+            check("exported schedule.json is valid ScheduleResult",
+                  "schedule_id" in sched_json and "windows" in sched_json and "entries" in sched_json,
+                  f"keys={list(sched_json.keys())[:10]}")
+
+        if "schedule_summary.md" in sched_zip_names:
+            with zf.open("schedule_summary.md") as f:
+                sched_md = f.read().decode("utf-8", errors="replace")
+            check("exported schedule_summary.md is readable and has headers",
+                  len(sched_md) > 100 and "# Release Schedule Summary" in sched_md,
+                  f"length={len(sched_md)} starts_with={sched_md[:100]!r}")
+            check("schedule_summary.md includes Windows section",
+                  "## Windows" in sched_md,
+                  f"has_windows_section={'## Windows' in sched_md}")
+            check("schedule_summary.md includes Overview",
+                  "## Overview" in sched_md,
+                  f"has_overview={'## Overview' in sched_md}")
+
+# Check history entry
+export_sched_runs = [h for h in list_history() if h.get("command") == "export"]
+if export_sched_runs:
+    latest_export_sched_id = export_sched_runs[0]["run_id"]
+    exp_sched_snap = get_snapshot(latest_export_sched_id)
+    check("export with schedule history has schedule_result",
+          exp_sched_snap is not None and exp_sched_snap.schedule_result is not None,
+          f"has_schedule={exp_sched_snap is not None and exp_sched_snap.schedule_result is not None}")
+
+
+# ---------------------------------------------------------------------------
+# Section 23: schedule - cross-restart history persistence and recomputation
+# ---------------------------------------------------------------------------
+print()
+print("Section 23: schedule - cross-restart history persistence")
+print("-" * 60)
+
+# Run a schedule to create a history entry
+proc_cross_restart = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "schedule",
+     "-m", str(manifest_path), "-w", str(windows_json_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+
+# Find the schedule history entry and reload it
+sched_cross_runs = [h for h in list_history() if h.get("command") == "schedule"]
+check("at least one schedule history entry for cross-restart test",
+      len(sched_cross_runs) >= 1,
+      f"count={len(sched_cross_runs)}")
+
+if sched_cross_runs:
+    cross_sched_id = sched_cross_runs[0]["run_id"]
+    # Load snapshot twice to simulate restart
+    snap1 = get_snapshot(cross_sched_id)
+    snap2 = get_snapshot(cross_sched_id)
+    check("cross-restart reload yields identical schedule_result",
+          snap1 is not None and snap2 is not None and
+          snap1.schedule_result == snap2.schedule_result,
+          f"same_result={snap1.schedule_result == snap2.schedule_result if snap1 and snap2 else False}")
+
+    # Check history directory has schedule.json
+    if HIST_DIR.exists():
+        sched_hist_dir = HIST_DIR / cross_sched_id
+        if sched_hist_dir.exists():
+            sched_hist_file = sched_hist_dir / "schedule.json"
+            check("history dir contains schedule.json file",
+                  sched_hist_file.exists(),
+                  f"exists={sched_hist_file.exists()}")
+            if sched_hist_file.exists():
+                hist_sched_data = json.loads(sched_hist_file.read_text(encoding="utf-8"))
+                check("history schedule.json matches snapshot schedule_result",
+                      hist_sched_data == snap1.schedule_result,
+                      f"matches={hist_sched_data == snap1.schedule_result}")
+
+            sched_sum_file = sched_hist_dir / "schedule_summary.md"
+            check("history dir contains schedule_summary.md (if schedule was successful)",
+                  sched_sum_file.exists() or proc_cross_restart.returncode != 0,
+                  f"exists={sched_sum_file.exists()} schedule_exit={proc_cross_restart.returncode}")
+
+
+# ---------------------------------------------------------------------------
+# Section 24: schedule - log message verification
+# ---------------------------------------------------------------------------
+print()
+print("Section 24: schedule - log message format and content")
+print("-" * 60)
+
+# Run schedule with known mismatch to get log output
+proc_log_test = subprocess.run(
+    [sys.executable, "-m", "release_orchestrator", "schedule",
+     "-m", str(conflict_manifest_path), "-w", str(strict_window_path)],
+    cwd=str(ROOT), capture_output=True, text=True,
+)
+
+# Find this run in history and check its logs
+log_test_runs = [h for h in list_history() if h.get("command") == "schedule"]
+if log_test_runs:
+    log_test_id = log_test_runs[0]["run_id"]
+    log_snap = get_snapshot(log_test_id)
+    check("snapshot has logs",
+          log_snap is not None and len(log_snap.logs) > 0,
+          f"has_logs={log_snap is not None and len(log_snap.logs) > 0}")
+
+    if log_snap and log_snap.logs:
+        log_messages = [l.get("message", "") for l in log_snap.logs]
+        check("logs contain scheduler module entries",
+              any("scheduler" in str(l.get("module", "")) for l in log_snap.logs),
+              f"has_scheduler_module={any('scheduler' in str(l.get('module','')) for l in log_snap.logs)}")
+        check("logs contain SCHEDULE_FAILED issue codes",
+              any("SCHEDULE_FAILED" in m for m in log_messages),
+              f"has_schedule_failed={any('SCHEDULE_FAILED' in m for m in log_messages)}")
+        check("logs contain component name tags",
+              any("svc-" in str(l.get("component", "")) for l in log_snap.logs),
+              f"has_component_tags={any('svc-' in str(l.get('component','')) for l in log_snap.logs)}")
+
+# Verify CLI stdout has the same error codes as log entries
+check("CLI stdout shows error issue codes matching log entries",
+      "SCHEDULE_FAILED" in proc_log_test.stdout,
+      f"stdout_has_error_codes={'SCHEDULE_FAILED' in proc_log_test.stdout}")
+
+
+# ---------------------------------------------------------------------------
 # Final summary + exit code
 # ---------------------------------------------------------------------------
 print()

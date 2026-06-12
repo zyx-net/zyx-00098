@@ -44,6 +44,8 @@ VALIDATION_FILE = "validation.json"
 PLAN_FILE = "release_plan.json"
 ROLLBACK_PLAN_FILE = "rollback_plan.json"
 DRY_RUN_FILE = "dry_run_result.json"
+SCHEDULE_FILE = "schedule.json"
+SCHEDULE_SUMMARY_FILE = "schedule_summary.md"
 CONFIG_FILE = "config.json"
 
 
@@ -117,6 +119,8 @@ def persist_run_artifacts(
     release_plan: Optional[Dict[str, Any]] = None,
     rollback_plan: Optional[Dict[str, Any]] = None,
     dry_run_result: Optional[Dict[str, Any]] = None,
+    schedule_result: Optional[Dict[str, Any]] = None,
+    schedule_summary: Optional[str] = None,
     logs_text: str = "",
     logs_entries: Optional[List[Dict[str, Any]]] = None,
     base: Optional[str] = None,
@@ -139,6 +143,10 @@ def persist_run_artifacts(
         save_json(rollback_plan, run_dir / ROLLBACK_PLAN_FILE)
     if dry_run_result is not None:
         save_json(dry_run_result, run_dir / DRY_RUN_FILE)
+    if schedule_result is not None:
+        save_json(schedule_result, run_dir / SCHEDULE_FILE)
+    if schedule_summary is not None:
+        (run_dir / SCHEDULE_SUMMARY_FILE).write_text(schedule_summary, encoding="utf-8")
     if config_snapshot is not None:
         save_json(config_snapshot, run_dir / CONFIG_FILE)
 

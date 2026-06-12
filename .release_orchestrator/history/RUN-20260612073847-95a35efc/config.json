@@ -1,0 +1,19 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "schedule",
+    "manifest": "examples/clean_manifest.json",
+    "policy": null,
+    "windows": "examples/windows_config.csv",
+    "waves": null,
+    "output": "test_sched_csv.json",
+    "lock": null,
+    "unlock": null,
+    "by": "admin@corp.com",
+    "skip_validate": false,
+    "func": "<function _run at 0x000002A7EF7FD430>"
+  },
+  "command": "schedule",
+  "run_id": "RUN-20260612073847-95a35efc"
+}

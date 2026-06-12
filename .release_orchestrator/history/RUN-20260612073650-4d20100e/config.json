@@ -1,0 +1,19 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "schedule",
+    "manifest": "examples/clean_manifest.json",
+    "policy": null,
+    "windows": "examples/windows_config.json",
+    "waves": null,
+    "output": null,
+    "lock": "WIN-2026-JUN-W1",
+    "unlock": null,
+    "by": "admin@corp.com",
+    "skip_validate": false,
+    "func": "<function _run at 0x000002E39689D430>"
+  },
+  "command": "schedule",
+  "run_id": "RUN-20260612073650-4d20100e"
+}
