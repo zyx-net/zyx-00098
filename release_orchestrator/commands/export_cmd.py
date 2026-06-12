@@ -9,7 +9,7 @@ from ..core.compare import compare_snapshots
 from ..core.dryrun import DryRunExecutor
 from ..core.planner import ReleasePlanner
 from ..core.rollback import RollbackPlanner
-from ..core.scheduler import SchedulingEngine, load_waves_from_json, load_windows_from_csv, load_windows_from_json
+from ..core.scheduler import SchedulingEngine, load_waves_from_json, load_windows_from_csv, load_windows_from_json, load_window_state
 from ..core.validator import ValidationEngine
 from ..utils.exit_codes import (
     EXIT_CONFIG_ERROR,
@@ -139,6 +139,8 @@ def _run(args: argparse.Namespace, run_id: str = "", **_: Any) -> CommandResult:
                     rollback_plan=rollback_dict,
                     extra_artifacts={"policy_snapshot": policy_dict},
                 )
+
+        load_window_state(windows, base=getattr(args, "work_dir", None))
 
         scheduler = SchedulingEngine(manifest, windows, waves, policy, validation)
         schedule_result = scheduler.schedule()

@@ -1,0 +1,14 @@
+{
+  "target_environment": "staging",
+  "policy_version": "1.0",
+  "default_environment": "staging",
+  "rules_applied": [],
+  "component_impact": {},
+  "warnings": [],
+  "env_rules": {
+    "require_approval": false,
+    "allow_version_downgrade": true,
+    "skip_checksum_components": [],
+    "dry_run_failure_blocks_export": false
+  }
+}

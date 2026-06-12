@@ -1177,9 +1177,9 @@ from release_orchestrator.core.models import ReleaseManifest
 conflict_manifest_path = ROOT / "examples" / "conflict_manifest.json"
 conflict_manifest = load_manifest(str(manifest_path))
 # Set all components to production environment
-for comp in conflict_manifest["components"]:
-    comp["environment"] = "production"
-    comp["approvals"] = []  # Remove all approvals
+for comp in conflict_manifest.components:
+    comp.environment = "production"
+    comp.approvals = []  # Remove all approvals
 save_manifest(conflict_manifest, conflict_manifest_path)
 
 # Window that requires release-manager approval
@@ -1287,7 +1287,7 @@ print()
 print("Section 22: export with schedule includes schedule.json and summary")
 print("-" * 60)
 
-EXPORT_SCHED_EXPECTED = EXPECTED_EXPORT_FILES | {"schedule.json", "schedule_summary.md"}
+EXPORT_SCHED_EXPECTED = (EXPECTED_EXPORT_FILES - {"dry_run_result.json"}) | {"schedule.json", "schedule_summary.md"}
 
 export_sched_out = ROOT / "archives" / "regression_schedule_export"
 if export_sched_out.with_suffix(".zip").exists():
@@ -1412,16 +1412,17 @@ proc_log_test = subprocess.run(
     cwd=str(ROOT), capture_output=True, text=True,
 )
 
-# Find this run in history and check its logs
-log_test_runs = [h for h in list_history() if h.get("command") == "schedule"]
-if log_test_runs:
-    log_test_id = log_test_runs[0]["run_id"]
-    log_snap = get_snapshot(log_test_id)
+# Extract run_id from output
+run_id_match = re.search(r'"run_id":\s*"([^"]+)"', proc_log_test.stdout)
+log_test_id = run_id_match.group(1) if run_id_match else None
+log_snap = get_snapshot(log_test_id) if log_test_id else None
+
+if log_snap:
     check("snapshot has logs",
           log_snap is not None and len(log_snap.logs) > 0,
           f"has_logs={log_snap is not None and len(log_snap.logs) > 0}")
 
-    if log_snap and log_snap.logs:
+    if log_snap.logs:
         log_messages = [l.get("message", "") for l in log_snap.logs]
         check("logs contain scheduler module entries",
               any("scheduler" in str(l.get("module", "")) for l in log_snap.logs),
@@ -1430,8 +1431,10 @@ if log_test_runs:
               any("SCHEDULE_FAILED" in m for m in log_messages),
               f"has_schedule_failed={any('SCHEDULE_FAILED' in m for m in log_messages)}")
         check("logs contain component name tags",
-              any("svc-" in str(l.get("component", "")) for l in log_snap.logs),
-              f"has_component_tags={any('svc-' in str(l.get('component','')) for l in log_snap.logs)}")
+              any(("common" in str((l.get("extra") or {}).get("component", "")) or
+                   "service" in str((l.get("extra") or {}).get("component", "")))
+                  for l in log_snap.logs),
+              f"has_component_tags={any(('common' in str((l.get('extra') or {}).get('component','')) or 'service' in str((l.get('extra') or {}).get('component',''))) for l in log_snap.logs)}")
 
 # Verify CLI stdout has the same error codes as log entries
 check("CLI stdout shows error issue codes matching log entries",

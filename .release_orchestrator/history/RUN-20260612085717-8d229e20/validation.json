@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-06-12T08:57:17Z",
+  "passed": false,
+  "issues": [
+    {
+      "component": "svc-inline",
+      "severity": "info",
+      "issue_code": "NO_DEPLOYED_VERSION",
+      "message": "No deployed version recorded for svc-inline",
+      "details": null
+    },
+    {
+      "component": "svc-inline",
+      "severity": "warning",
+      "issue_code": "CHECKSUM_DECLARATION_INCOMPLETE",
+      "message": "Component svc-inline has incomplete artifact/path declaration",
+      "details": null
+    },
+    {
+      "component": "svc-inline",
+      "severity": "error",
+      "issue_code": "APPROVAL_MISSING",
+      "message": "Component svc-inline (staging) has no APPROVED approval record (required by policy)",
+      "details": {
+        "approvals_count": 0,
+        "policy": "require_approval"
+      }
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "errors": 1,
+    "warnings": 1,
+    "infos": 1
+  }
+}

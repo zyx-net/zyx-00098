@@ -1,0 +1,69 @@
+{
+  "schedule_id": "SCHED-20260612093520-d29596a0",
+  "generated_at": "2026-06-12T09:35:20Z",
+  "windows": [
+    {
+      "window_id": "WIN-REVIEW-TEST",
+      "name": "Reviewer Test Window",
+      "start_time": "2026-06-15T09:00:00Z",
+      "end_time": "2026-06-15T17:00:00Z",
+      "timezone": "UTC",
+      "capacity_max": 5,
+      "allowed_environments": [
+        "production"
+      ],
+      "required_approval_roles": [
+        "release-manager@corp.com"
+      ],
+      "freeze_periods": [],
+      "locked": false,
+      "locked_by": null,
+      "locked_at": null,
+      "description": null,
+      "tags": []
+    }
+  ],
+  "waves": [
+    {
+      "wave_id": "WAVE-REVIEW-1",
+      "name": "Reviewer Wave 1",
+      "order": 1,
+      "description": null
+    },
+    {
+      "wave_id": "WAVE-REVIEW-2",
+      "name": "Reviewer Wave 2",
+      "order": 2,
+      "description": null
+    }
+  ],
+  "entries": [],
+  "issues": [
+    {
+      "component": "svc-test",
+      "severity": "error",
+      "issue_code": "SCHEDULE_FAILED",
+      "message": "Window Reviewer Test Window: Missing required approval for environment",
+      "details": null
+    }
+  ],
+  "unscheduled_components": [
+    {
+      "component": "svc-test",
+      "version": "1.0.0",
+      "reasons": [
+        "Window Reviewer Test Window: Missing required approval for environment"
+      ]
+    }
+  ],
+  "total_scheduled": 0,
+  "total_unscheduled": 1,
+  "summary": {
+    "windows": 1,
+    "waves": 2,
+    "scheduled": 0,
+    "unscheduled": 1,
+    "errors": 1,
+    "warnings": 0
+  }
+}

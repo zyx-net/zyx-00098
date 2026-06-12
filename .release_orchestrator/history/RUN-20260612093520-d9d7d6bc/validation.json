@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-06-12T09:35:20Z",
+  "passed": false,
+  "issues": [
+    {
+      "component": "svc-test",
+      "severity": "info",
+      "issue_code": "NO_DEPLOYED_VERSION",
+      "message": "No deployed version recorded for svc-test",
+      "details": null
+    },
+    {
+      "component": "svc-test",
+      "severity": "warning",
+      "issue_code": "ARTIFACT_FILE_MISSING",
+      "message": "Artifact file not found on disk for svc-test (offline mode, skipping content verification): examples/svc-a-1.0.0.pkg",
+      "details": {
+        "path": "examples/svc-a-1.0.0.pkg"
+      }
+    },
+    {
+      "component": "svc-test",
+      "severity": "error",
+      "issue_code": "APPROVAL_MISSING",
+      "message": "Component svc-test (production) has no APPROVED approval record (required by policy)",
+      "details": {
+        "approvals_count": 0,
+        "policy": "require_approval"
+      }
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "errors": 1,
+    "warnings": 1,
+    "infos": 1
+  }
+}

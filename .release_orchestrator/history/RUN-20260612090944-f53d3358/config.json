@@ -1,0 +1,17 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": null,
+    "limit": 20,
+    "show": "RUN-20260612090944-49b5832e",
+    "show_logs": false,
+    "as_json": false,
+    "compare": null,
+    "run_a": null,
+    "run_b": null,
+    "func": "<function _run at 0x0000019091A4D430>"
+  },
+  "command": "history",
+  "run_id": "RUN-20260612090944-f53d3358"
+}

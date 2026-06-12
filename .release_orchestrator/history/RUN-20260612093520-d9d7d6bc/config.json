@@ -1,0 +1,19 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "schedule",
+    "manifest": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\review_manifest_no_approval.json",
+    "policy": null,
+    "windows": null,
+    "waves": null,
+    "output": null,
+    "lock": null,
+    "unlock": null,
+    "by": "admin@corp.com",
+    "skip_validate": false,
+    "func": "<function _run at 0x0000022B8A2EDA60>"
+  },
+  "command": "schedule",
+  "run_id": "RUN-20260612093520-d9d7d6bc"
+}

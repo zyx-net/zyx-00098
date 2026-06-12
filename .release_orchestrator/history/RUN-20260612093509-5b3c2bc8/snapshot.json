@@ -1,0 +1,63 @@
+{
+  "run_id": "RUN-20260612093509-5b3c2bc8",
+  "command": "schedule",
+  "started_at": "2026-06-12T09:35:09Z",
+  "finished_at": "2026-06-12T09:35:09Z",
+  "exit_code": 10,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "schedule",
+      "manifest": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\review_manifest_no_approval.json",
+      "policy": null,
+      "windows": null,
+      "waves": null,
+      "output": null,
+      "lock": null,
+      "unlock": null,
+      "by": "admin@corp.com",
+      "skip_validate": false,
+      "func": "<function _run at 0x00000212E44DDA60>"
+    },
+    "command": "schedule",
+    "run_id": "RUN-20260612093509-5b3c2bc8"
+  },
+  "manifest_snapshot": null,
+  "policy_snapshot": null,
+  "policy_summary": null,
+  "validation_result": null,
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": null,
+  "logs": [
+    {
+      "timestamp": "2026-06-12T09:35:09Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[schedule] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612093509-5b3c2bc8"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:35:09Z",
+      "level": "ERROR",
+      "module": "cmd.schedule",
+      "message": "Invalid manifest: Invalid manifest JSON: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T09:35:09Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[schedule] Finished",
+      "extra": {
+        "run_id": "RUN-20260612093509-5b3c2bc8",
+        "exit_code": 10
+      }
+    }
+  ],
+  "archive_path": null
+}

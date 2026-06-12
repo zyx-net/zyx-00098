@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-06-12T09:38:49Z",
+  "passed": true,
+  "issues": [
+    {
+      "component": "base-lib",
+      "severity": "warning",
+      "issue_code": "CHECKSUM_DECLARATION_INCOMPLETE",
+      "message": "Component base-lib has incomplete artifact/path declaration",
+      "details": null
+    },
+    {
+      "component": "web-app",
+      "severity": "warning",
+      "issue_code": "CHECKSUM_DECLARATION_INCOMPLETE",
+      "message": "Component web-app has incomplete artifact/path declaration",
+      "details": null
+    },
+    {
+      "component": "base-lib",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component base-lib approved by: alice@corp.com",
+      "details": {
+        "approvers": [
+          "alice@corp.com"
+        ]
+      }
+    },
+    {
+      "component": "web-app",
+      "severity": "info",
+      "issue_code": "APPROVAL_OK",
+      "message": "Component web-app approved by: bob@corp.com",
+      "details": {
+        "approvers": [
+          "bob@corp.com"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "errors": 0,
+    "warnings": 2,
+    "infos": 2
+  }
+}

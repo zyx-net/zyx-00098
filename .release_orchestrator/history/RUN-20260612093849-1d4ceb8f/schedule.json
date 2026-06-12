@@ -1,0 +1,113 @@
+{
+  "schedule_id": "SCHED-20260612093849-6203267c",
+  "generated_at": "2026-06-12T09:38:49Z",
+  "windows": [
+    {
+      "window_id": "WIN-REVIEWER-ALPHA",
+      "name": "Reviewer Alpha Window",
+      "start_time": "2026-06-15T09:00:00Z",
+      "end_time": "2026-06-15T12:00:00Z",
+      "timezone": "UTC",
+      "capacity_max": 3,
+      "allowed_environments": [
+        "staging"
+      ],
+      "required_approval_roles": [],
+      "freeze_periods": [],
+      "locked": false,
+      "locked_by": null,
+      "locked_at": null,
+      "description": null,
+      "tags": []
+    },
+    {
+      "window_id": "WIN-REVIEWER-BETA",
+      "name": "Reviewer Beta Window",
+      "start_time": "2026-06-16T09:00:00Z",
+      "end_time": "2026-06-16T12:00:00Z",
+      "timezone": "UTC",
+      "capacity_max": 3,
+      "allowed_environments": [
+        "staging"
+      ],
+      "required_approval_roles": [],
+      "freeze_periods": [],
+      "locked": false,
+      "locked_by": null,
+      "locked_at": null,
+      "description": null,
+      "tags": []
+    }
+  ],
+  "waves": [
+    {
+      "wave_id": "WAVE-R1",
+      "name": "First Wave",
+      "order": 1,
+      "description": null
+    },
+    {
+      "wave_id": "WAVE-R2",
+      "name": "Second Wave",
+      "order": 2,
+      "description": null
+    }
+  ],
+  "entries": [
+    {
+      "component_name": "base-lib",
+      "component_version": "1.0.0",
+      "window_id": "WIN-REVIEWER-ALPHA",
+      "wave_id": "WAVE-R1",
+      "scheduled_start": "2026-06-15T09:00:00Z",
+      "status": "scheduled",
+      "reasons": [
+        "Scheduled into Reviewer Alpha Window wave First Wave"
+      ]
+    },
+    {
+      "component_name": "web-app",
+      "component_version": "2.0.0",
+      "window_id": "WIN-REVIEWER-ALPHA",
+      "wave_id": "WAVE-R2",
+      "scheduled_start": "2026-06-15T09:00:00Z",
+      "status": "scheduled",
+      "reasons": [
+        "Scheduled into Reviewer Alpha Window wave Second Wave"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "component": "base-lib",
+      "severity": "info",
+      "issue_code": "COMPONENT_SCHEDULED",
+      "message": "Scheduled base-lib v1.0.0 into Reviewer Alpha Window wave First Wave",
+      "details": {
+        "window_id": "WIN-REVIEWER-ALPHA",
+        "wave_id": "WAVE-R1"
+      }
+    },
+    {
+      "component": "web-app",
+      "severity": "info",
+      "issue_code": "COMPONENT_SCHEDULED",
+      "message": "Scheduled web-app v2.0.0 into Reviewer Alpha Window wave Second Wave",
+      "details": {
+        "window_id": "WIN-REVIEWER-ALPHA",
+        "wave_id": "WAVE-R2"
+      }
+    }
+  ],
+  "unscheduled_components": [],
+  "total_scheduled": 2,
+  "total_unscheduled": 0,
+  "summary": {
+    "windows": 2,
+    "waves": 2,
+    "scheduled": 2,
+    "unscheduled": 0,
+    "errors": 0,
+    "warnings": 0
+  }
+}

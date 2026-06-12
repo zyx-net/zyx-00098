@@ -1,0 +1,76 @@
+{
+  "plan_id": "RBP-20260612091227-8475b6e7",
+  "release_id": "REL-20260612072519-65051956",
+  "generated_at": "2026-06-12T09:12:27Z",
+  "target_environment": "staging",
+  "execution_order": [
+    "payment-service",
+    "order-service",
+    "auth-service",
+    "common-utils"
+  ],
+  "steps": [
+    {
+      "step_index": 0,
+      "component_name": "payment-service",
+      "component_version": "2.0.1",
+      "action": "rollback",
+      "prerequisites": [],
+      "blockers": [],
+      "approver": null,
+      "rollback_target": "2.0.2",
+      "status": "scheduled",
+      "estimated_duration_minutes": 3,
+      "notes": "Rolling back from 2.0.2 to 2.0.1"
+    },
+    {
+      "step_index": 1,
+      "component_name": "order-service",
+      "component_version": "3.0.4",
+      "action": "rollback",
+      "prerequisites": [
+        "payment-service"
+      ],
+      "blockers": [],
+      "approver": null,
+      "rollback_target": "3.1.0",
+      "status": "scheduled",
+      "estimated_duration_minutes": 3,
+      "notes": "Rolling back from 3.1.0 to 3.0.4"
+    },
+    {
+      "step_index": 2,
+      "component_name": "auth-service",
+      "component_version": "1.4.2",
+      "action": "rollback",
+      "prerequisites": [
+        "order-service"
+      ],
+      "blockers": [],
+      "approver": null,
+      "rollback_target": "1.5.0",
+      "status": "scheduled",
+      "estimated_duration_minutes": 3,
+      "notes": "Rolling back from 1.5.0 to 1.4.2"
+    },
+    {
+      "step_index": 3,
+      "component_name": "common-utils",
+      "component_version": "2.2.0",
+      "action": "rollback",
+      "prerequisites": [
+        "auth-service",
+        "order-service",
+        "payment-service"
+      ],
+      "blockers": [],
+      "approver": null,
+      "rollback_target": "2.3.1",
+      "status": "scheduled",
+      "estimated_duration_minutes": 3,
+      "notes": "Rolling back from 2.3.1 to 2.2.0"
+    }
+  ],
+  "blocked_components": [],
+  "total_estimated_minutes": 12
+}

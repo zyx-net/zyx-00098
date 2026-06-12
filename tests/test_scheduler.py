@@ -477,5 +477,206 @@ class TestLoggerIntegration(unittest.TestCase):
         self.assertIn("svc-log", log_text)
 
 
+class TestReleaseManifestWindowsParsing(unittest.TestCase):
+    """Tests for ReleaseManifest.from_dict / to_dict handling of
+    release_windows and waves fields.  These cover the root cause fix
+    for 'schedule misreports no windows' when windows are inline in
+    the manifest."""
+
+    def setUp(self):
+        self.builder = _TestManifestBuilder()
+
+    def test_from_dict_parses_release_windows(self):
+        from release_orchestrator.core.models import ReleaseManifest
+        data = {
+            "manifest_version": "1.0",
+            "release_id": "REL-TEST",
+            "title": "Test",
+            "target_environment": "staging",
+            "components": [],
+            "release_windows": [
+                {
+                    "window_id": "WIN-INLINE",
+                    "name": "Inline Window",
+                    "start_time": "2026-06-15T09:00:00Z",
+                    "end_time": "2026-06-15T17:00:00Z",
+                    "allowed_environments": ["staging"],
+                }
+            ],
+            "waves": [
+                {
+                    "wave_id": "WAVE-1",
+                    "name": "Wave 1",
+                    "order": 1,
+                }
+            ],
+        }
+        manifest = ReleaseManifest.from_dict(data)
+        self.assertEqual(len(manifest.release_windows), 1)
+        self.assertEqual(manifest.release_windows[0].window_id, "WIN-INLINE")
+        self.assertEqual(len(manifest.waves), 1)
+        self.assertEqual(manifest.waves[0].wave_id, "WAVE-1")
+
+    def test_from_dict_without_windows_waves_returns_empty(self):
+        from release_orchestrator.core.models import ReleaseManifest
+        data = {
+            "manifest_version": "1.0",
+            "release_id": "REL-TEST",
+            "title": "Test",
+            "target_environment": "staging",
+            "components": [],
+        }
+        manifest = ReleaseManifest.from_dict(data)
+        self.assertEqual(manifest.release_windows, [])
+        self.assertEqual(manifest.waves, [])
+
+    def test_to_dict_includes_release_windows_and_waves(self):
+        from release_orchestrator.core.models import (
+            ReleaseManifest, ReleaseWindow, Wave, EnvironmentType,
+        )
+        manifest = ReleaseManifest(
+            manifest_version="1.0",
+            release_id="REL-TEST",
+            title="Test",
+            target_environment=EnvironmentType.STAGING,
+            release_windows=[
+                ReleaseWindow(
+                    window_id="WIN-1",
+                    name="W1",
+                    start_time="2026-06-15T09:00:00Z",
+                    end_time="2026-06-15T17:00:00Z",
+                    allowed_environments=["staging"],
+                )
+            ],
+            waves=[
+                Wave(wave_id="W1", name="Wave1", order=1)
+            ],
+        )
+        d = manifest.to_dict()
+        self.assertIn("release_windows", d)
+        self.assertEqual(len(d["release_windows"]), 1)
+        self.assertEqual(d["release_windows"][0]["window_id"], "WIN-1")
+        self.assertIn("waves", d)
+        self.assertEqual(len(d["waves"]), 1)
+        self.assertEqual(d["waves"][0]["wave_id"], "W1")
+
+    def test_validate_and_schedule_uses_manifest_inline_windows(self):
+        """Validate that validate_and_schedule does NOT misreport 'no
+        windows' when windows are declared inline in the manifest."""
+        from release_orchestrator.core.models import (
+            ReleaseManifest, ReleaseWindow,
+        )
+        from release_orchestrator.core.scheduler import validate_and_schedule
+        import tempfile
+        import json
+        builder = self.builder
+        c = builder.make_component("svc-inline", env=EnvironmentType.STAGING)
+        manifest = ReleaseManifest(
+            manifest_version="1.0",
+            release_id="REL-INLINE",
+            title="Inline Test",
+            target_environment=EnvironmentType.STAGING,
+            components=[c],
+            release_windows=[
+                ReleaseWindow(
+                    window_id="WIN-INLINE",
+                    name="Inline",
+                    start_time="2026-06-15T09:00:00Z",
+                    end_time="2026-06-15T17:00:00Z",
+                    allowed_environments=["staging"],
+                )
+            ],
+        )
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            json.dump(manifest.to_dict(), f)
+            manifest_path = f.name
+        try:
+            # No windows_path provided — should pick up manifest inline windows
+            result, validation, exit_code = validate_and_schedule(manifest_path)
+            self.assertIsNotNone(result)
+            self.assertEqual(len(result.windows), 1)
+            self.assertEqual(result.windows[0].window_id, "WIN-INLINE")
+            self.assertNotEqual(exit_code, 192)  # EXIT_CONFIG_ERROR code means no windows
+        finally:
+            os.unlink(manifest_path)
+
+
+class TestWindowStatePersistence(unittest.TestCase):
+    """Tests for save_window_state / load_window_state, covering
+    cross-restart lock state consumption."""
+
+    def setUp(self):
+        self.temp_work = tempfile.mkdtemp(prefix="ro_state_")
+        # Monkey-patch default work dir
+        from release_orchestrator.utils import storage
+        self._orig_default = getattr(storage, 'DEFAULT_WORK_DIR', '.release_orchestrator')
+        storage.DEFAULT_WORK_DIR = Path(self.temp_work)
+
+    def tearDown(self):
+        from release_orchestrator.utils import storage
+        storage.DEFAULT_WORK_DIR = self._orig_default
+        import shutil
+        shutil.rmtree(self.temp_work, ignore_errors=True)
+
+    def test_save_then_load_window_state_preserves_lock(self):
+        from release_orchestrator.core.scheduler import (
+            save_window_state, load_window_state,
+        )
+        w1 = _make_window("WIN-LOCKED", "Locked")
+        w2 = _make_window("WIN-OPEN", "Open")
+        w1.locked = True
+        w1.locked_by = "user@corp.com"
+        w1.locked_at = "2026-06-12T10:00:00Z"
+        save_window_state([w1, w2], base=str(Path(self.temp_work).parent))
+
+        # New window instances (simulating fresh load from config)
+        w1_new = _make_window("WIN-LOCKED", "Locked")
+        w2_new = _make_window("WIN-OPEN", "Open")
+        self.assertFalse(w1_new.locked)
+        self.assertIsNone(w1_new.locked_by)
+
+        applied = load_window_state([w1_new, w2_new], base=str(Path(self.temp_work).parent))
+        self.assertGreaterEqual(applied, 1)
+        self.assertTrue(w1_new.locked)
+        self.assertEqual(w1_new.locked_by, "user@corp.com")
+        self.assertEqual(w1_new.locked_at, "2026-06-12T10:00:00Z")
+        self.assertFalse(w2_new.locked)
+
+    def test_locked_state_blocks_scheduling_after_reload(self):
+        """Lock a window, save state, reload state, schedule — should
+        not schedule into the locked window."""
+        from release_orchestrator.core.scheduler import (
+            save_window_state, load_window_state, SchedulingEngine,
+        )
+        builder = _TestManifestBuilder()
+        c = builder.make_component("svc-a", env=EnvironmentType.STAGING)
+        manifest = builder.make_manifest([c])
+
+        w = _make_window("WIN-LOCKED", "Locked", envs=["staging"], capacity=3)
+        w.locked = True
+        w.locked_by = "test@corp.com"
+        w.locked_at = "2026-06-12T10:00:00Z"
+
+        save_window_state([w], base=str(Path(self.temp_work).parent))
+
+        # Fresh window list, apply state
+        w_fresh = _make_window("WIN-LOCKED", "Locked", envs=["staging"], capacity=3)
+        load_window_state([w_fresh], base=str(Path(self.temp_work).parent))
+        self.assertTrue(w_fresh.locked)
+
+        engine = SchedulingEngine(manifest, [w_fresh])
+        result = engine.schedule()
+        self.assertEqual(result.total_scheduled, 0)
+        self.assertEqual(result.total_unscheduled, 1)
+        reasons = result.unscheduled_components[0]["reasons"]
+        self.assertTrue(any("locked" in r.lower() for r in reasons))
+
+    def test_load_state_no_file_returns_zero(self):
+        from release_orchestrator.core.scheduler import load_window_state
+        w = _make_window("WIN-1", "W1")
+        applied = load_window_state([w], base=str(Path(self.temp_work).parent))
+        self.assertEqual(applied, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

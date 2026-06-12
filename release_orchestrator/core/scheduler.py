@@ -35,6 +35,7 @@ from .models import (
 from .policy import ReleasePolicy, default_policy
 from .validator import ValidationEngine
 from ..utils.logger import get_logger
+from ..utils.storage import DEFAULT_WORK_DIR, get_work_dir, load_json, save_json
 from ..utils.exit_codes import (
     EXIT_APPROVAL_MISSING,
     EXIT_CONFIG_ERROR,
@@ -612,6 +613,54 @@ def load_waves_from_json(path: str) -> List[Wave]:
     return waves
 
 
+WINDOW_STATE_FILE = "window_state.json"
+
+
+def save_window_state(windows: List[ReleaseWindow], base: Optional[str] = None) -> None:
+    """Persist window state (locked/locked_by/locked_at) to work dir."""
+    work = get_work_dir(base)
+    state = {
+        w.window_id: {
+            "locked": w.locked,
+            "locked_by": w.locked_by,
+            "locked_at": w.locked_at,
+        }
+        for w in windows
+    }
+    save_json(state, work / WINDOW_STATE_FILE)
+    LOG.info(MODULE, "Saved window state", file=str(work / WINDOW_STATE_FILE), windows=len(state))
+
+
+def load_window_state(windows: List[ReleaseWindow], base: Optional[str] = None) -> int:
+    """Merge persisted window state into the provided windows list.
+
+    Returns the number of windows that had state applied.
+    """
+    work = get_work_dir(base)
+    state_file = work / WINDOW_STATE_FILE
+    if not state_file.exists():
+        return 0
+
+    try:
+        state = load_json(state_file)
+    except Exception:
+        return 0
+
+    applied = 0
+    by_id = {w.window_id: w for w in windows}
+    for window_id, win_state in state.items():
+        w = by_id.get(window_id)
+        if w:
+            w.locked = win_state.get("locked", False)
+            w.locked_by = win_state.get("locked_by")
+            w.locked_at = win_state.get("locked_at")
+            applied += 1
+
+    if applied > 0:
+        LOG.info(MODULE, "Loaded window state from disk", applied=applied, file=str(state_file))
+    return applied
+
+
 def validate_and_schedule(
     manifest_path: str,
     windows_path: Optional[str] = None,
@@ -657,12 +706,18 @@ def validate_and_schedule(
 
     manifest_windows = getattr(manifest, "release_windows", None)
     if manifest_windows and not windows:
-        windows = [ReleaseWindow.from_dict(w) for w in manifest_windows]
+        windows = [
+            ReleaseWindow.from_dict(w) if isinstance(w, dict) else w
+            for w in manifest_windows
+        ]
         LOG.info(MODULE, f"Loaded {len(windows)} windows from manifest")
 
     manifest_waves = getattr(manifest, "waves", None)
     if manifest_waves:
-        waves = [Wave.from_dict(w) for w in manifest_waves]
+        waves = [
+            Wave.from_dict(w) if isinstance(w, dict) else w
+            for w in manifest_waves
+        ]
         LOG.info(MODULE, f"Loaded {len(waves)} waves from manifest")
 
     if waves_path:
@@ -678,6 +733,8 @@ def validate_and_schedule(
     if not windows:
         LOG.error(MODULE, "No windows configured for scheduling")
         return None, None, EXIT_CONFIG_ERROR.code
+
+    load_window_state(windows, base=None)
 
     engine = ValidationEngine(manifest, policy=policy)
     validation = engine.validate()

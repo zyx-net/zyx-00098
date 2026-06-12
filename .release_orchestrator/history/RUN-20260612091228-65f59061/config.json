@@ -1,0 +1,14 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "validate",
+    "manifest": "D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+    "policy": "D:\\workSpace\\AI__SPACE\\zyx-00098\\test_policies\\bad_policy.json",
+    "no_checksum": false,
+    "strict": false,
+    "func": "<function _run at 0x000001997C6FBE20>"
+  },
+  "command": "validate",
+  "run_id": "RUN-20260612091228-65f59061"
+}

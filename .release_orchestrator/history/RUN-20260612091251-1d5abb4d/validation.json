@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-06-12T09:12:51Z",
+  "passed": false,
+  "issues": [
+    {
+      "component": "common-utils",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for common-utils",
+      "details": null
+    },
+    {
+      "component": "auth-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for auth-service",
+      "details": null
+    },
+    {
+      "component": "order-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for order-service",
+      "details": null
+    },
+    {
+      "component": "payment-service",
+      "severity": "info",
+      "issue_code": "CHECKSUM_OK",
+      "message": "Checksum verified OK for payment-service",
+      "details": null
+    },
+    {
+      "component": "common-utils",
+      "severity": "error",
+      "issue_code": "APPROVAL_MISSING",
+      "message": "Component common-utils (production) has no APPROVED approval record (required by policy)",
+      "details": {
+        "approvals_count": 0,
+        "policy": "require_approval"
+      }
+    },
+    {
+      "component": "auth-service",
+      "severity": "error",
+      "issue_code": "APPROVAL_MISSING",
+      "message": "Component auth-service (production) has no APPROVED approval record (required by policy)",
+      "details": {
+        "approvals_count": 0,
+        "policy": "require_approval"
+      }
+    },
+    {
+      "component": "order-service",
+      "severity": "error",
+      "issue_code": "APPROVAL_MISSING",
+      "message": "Component order-service (production) has no APPROVED approval record (required by policy)",
+      "details": {
+        "approvals_count": 0,
+        "policy": "require_approval"
+      }
+    },
+    {
+      "component": "payment-service",
+      "severity": "error",
+      "issue_code": "APPROVAL_MISSING",
+      "message": "Component payment-service (production) has no APPROVED approval record (required by policy)",
+      "details": {
+        "approvals_count": 0,
+        "policy": "require_approval"
+      }
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "errors": 4,
+    "warnings": 0,
+    "infos": 4
+  }
+}

@@ -1,0 +1,491 @@
+{
+  "run_id": "RUN-20260612093849-1d4ceb8f",
+  "command": "schedule",
+  "started_at": "2026-06-12T09:38:49Z",
+  "finished_at": "2026-06-12T09:38:49Z",
+  "exit_code": 0,
+  "config_snapshot": {
+    "args": {
+      "verbose": false,
+      "work_dir": null,
+      "command": "schedule",
+      "manifest": "C:\\Users\\admin\\AppData\\Local\\Temp\\1\\reviewer_own_manifest.json",
+      "policy": null,
+      "windows": null,
+      "waves": null,
+      "output": null,
+      "lock": null,
+      "unlock": null,
+      "by": "admin@corp.com",
+      "skip_validate": false,
+      "func": "<function _run at 0x000001CD61C6DA60>"
+    },
+    "command": "schedule",
+    "run_id": "RUN-20260612093849-1d4ceb8f"
+  },
+  "manifest_snapshot": {
+    "manifest_version": "1.0",
+    "release_id": "REL-REVIEWER-OWN",
+    "title": "Reviewer Own Test",
+    "target_environment": "staging",
+    "scheduled_date": null,
+    "components": [
+      {
+        "name": "base-lib",
+        "version": "1.0.0",
+        "environment": "staging",
+        "artifact": {
+          "path": "",
+          "checksum": "abc",
+          "checksum_algorithm": "sha256",
+          "size_bytes": null
+        },
+        "dependencies": [],
+        "approvals": [
+          {
+            "approver": "alice@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-01T00:00:00Z",
+            "comment": null
+          }
+        ],
+        "deployed_version": "0.9.0",
+        "description": null,
+        "rollback_target_version": null,
+        "tags": []
+      },
+      {
+        "name": "web-app",
+        "version": "2.0.0",
+        "environment": "staging",
+        "artifact": {
+          "path": "",
+          "checksum": "def",
+          "checksum_algorithm": "sha256",
+          "size_bytes": null
+        },
+        "dependencies": [
+          {
+            "name": "base-lib",
+            "min_version": "1.0.0",
+            "max_version": null,
+            "required": true
+          }
+        ],
+        "approvals": [
+          {
+            "approver": "bob@corp.com",
+            "status": "approved",
+            "timestamp": "2026-06-01T00:00:00Z",
+            "comment": null
+          }
+        ],
+        "deployed_version": "1.9.0",
+        "description": null,
+        "rollback_target_version": null,
+        "tags": []
+      }
+    ],
+    "description": null,
+    "created_by": null,
+    "created_at": null,
+    "release_windows": [
+      {
+        "window_id": "WIN-REVIEWER-ALPHA",
+        "name": "Reviewer Alpha Window",
+        "start_time": "2026-06-15T09:00:00Z",
+        "end_time": "2026-06-15T12:00:00Z",
+        "timezone": "UTC",
+        "capacity_max": 3,
+        "allowed_environments": [
+          "staging"
+        ],
+        "required_approval_roles": [],
+        "freeze_periods": [],
+        "locked": false,
+        "locked_by": null,
+        "locked_at": null,
+        "description": null,
+        "tags": []
+      },
+      {
+        "window_id": "WIN-REVIEWER-BETA",
+        "name": "Reviewer Beta Window",
+        "start_time": "2026-06-16T09:00:00Z",
+        "end_time": "2026-06-16T12:00:00Z",
+        "timezone": "UTC",
+        "capacity_max": 3,
+        "allowed_environments": [
+          "staging"
+        ],
+        "required_approval_roles": [],
+        "freeze_periods": [],
+        "locked": false,
+        "locked_by": null,
+        "locked_at": null,
+        "description": null,
+        "tags": []
+      }
+    ],
+    "waves": [
+      {
+        "wave_id": "WAVE-R1",
+        "name": "First Wave",
+        "order": 1,
+        "description": null
+      },
+      {
+        "wave_id": "WAVE-R2",
+        "name": "Second Wave",
+        "order": 2,
+        "description": null
+      }
+    ]
+  },
+  "policy_snapshot": {
+    "policy_version": "1.0",
+    "default_environment": "production",
+    "env_rules": {
+      "dev": {
+        "require_approval": false,
+        "allow_version_downgrade": true,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": false
+      },
+      "test": {
+        "require_approval": false,
+        "allow_version_downgrade": false,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": true
+      },
+      "staging": {
+        "require_approval": true,
+        "allow_version_downgrade": false,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": true
+      },
+      "production": {
+        "require_approval": true,
+        "allow_version_downgrade": false,
+        "skip_checksum_components": [],
+        "dry_run_failure_blocks_export": true
+      }
+    }
+  },
+  "policy_summary": null,
+  "validation_result": {
+    "timestamp": "2026-06-12T09:38:49Z",
+    "passed": true,
+    "issues": [
+      {
+        "component": "base-lib",
+        "severity": "warning",
+        "issue_code": "CHECKSUM_DECLARATION_INCOMPLETE",
+        "message": "Component base-lib has incomplete artifact/path declaration",
+        "details": null
+      },
+      {
+        "component": "web-app",
+        "severity": "warning",
+        "issue_code": "CHECKSUM_DECLARATION_INCOMPLETE",
+        "message": "Component web-app has incomplete artifact/path declaration",
+        "details": null
+      },
+      {
+        "component": "base-lib",
+        "severity": "info",
+        "issue_code": "APPROVAL_OK",
+        "message": "Component base-lib approved by: alice@corp.com",
+        "details": {
+          "approvers": [
+            "alice@corp.com"
+          ]
+        }
+      },
+      {
+        "component": "web-app",
+        "severity": "info",
+        "issue_code": "APPROVAL_OK",
+        "message": "Component web-app approved by: bob@corp.com",
+        "details": {
+          "approvers": [
+            "bob@corp.com"
+          ]
+        }
+      }
+    ],
+    "summary": {
+      "total": 4,
+      "errors": 0,
+      "warnings": 2,
+      "infos": 2
+    }
+  },
+  "release_plan": null,
+  "rollback_plan": null,
+  "dry_run_result": null,
+  "schedule_result": {
+    "schedule_id": "SCHED-20260612093849-6203267c",
+    "generated_at": "2026-06-12T09:38:49Z",
+    "windows": [
+      {
+        "window_id": "WIN-REVIEWER-ALPHA",
+        "name": "Reviewer Alpha Window",
+        "start_time": "2026-06-15T09:00:00Z",
+        "end_time": "2026-06-15T12:00:00Z",
+        "timezone": "UTC",
+        "capacity_max": 3,
+        "allowed_environments": [
+          "staging"
+        ],
+        "required_approval_roles": [],
+        "freeze_periods": [],
+        "locked": false,
+        "locked_by": null,
+        "locked_at": null,
+        "description": null,
+        "tags": []
+      },
+      {
+        "window_id": "WIN-REVIEWER-BETA",
+        "name": "Reviewer Beta Window",
+        "start_time": "2026-06-16T09:00:00Z",
+        "end_time": "2026-06-16T12:00:00Z",
+        "timezone": "UTC",
+        "capacity_max": 3,
+        "allowed_environments": [
+          "staging"
+        ],
+        "required_approval_roles": [],
+        "freeze_periods": [],
+        "locked": false,
+        "locked_by": null,
+        "locked_at": null,
+        "description": null,
+        "tags": []
+      }
+    ],
+    "waves": [
+      {
+        "wave_id": "WAVE-R1",
+        "name": "First Wave",
+        "order": 1,
+        "description": null
+      },
+      {
+        "wave_id": "WAVE-R2",
+        "name": "Second Wave",
+        "order": 2,
+        "description": null
+      }
+    ],
+    "entries": [
+      {
+        "component_name": "base-lib",
+        "component_version": "1.0.0",
+        "window_id": "WIN-REVIEWER-ALPHA",
+        "wave_id": "WAVE-R1",
+        "scheduled_start": "2026-06-15T09:00:00Z",
+        "status": "scheduled",
+        "reasons": [
+          "Scheduled into Reviewer Alpha Window wave First Wave"
+        ]
+      },
+      {
+        "component_name": "web-app",
+        "component_version": "2.0.0",
+        "window_id": "WIN-REVIEWER-ALPHA",
+        "wave_id": "WAVE-R2",
+        "scheduled_start": "2026-06-15T09:00:00Z",
+        "status": "scheduled",
+        "reasons": [
+          "Scheduled into Reviewer Alpha Window wave Second Wave"
+        ]
+      }
+    ],
+    "issues": [
+      {
+        "component": "base-lib",
+        "severity": "info",
+        "issue_code": "COMPONENT_SCHEDULED",
+        "message": "Scheduled base-lib v1.0.0 into Reviewer Alpha Window wave First Wave",
+        "details": {
+          "window_id": "WIN-REVIEWER-ALPHA",
+          "wave_id": "WAVE-R1"
+        }
+      },
+      {
+        "component": "web-app",
+        "severity": "info",
+        "issue_code": "COMPONENT_SCHEDULED",
+        "message": "Scheduled web-app v2.0.0 into Reviewer Alpha Window wave Second Wave",
+        "details": {
+          "window_id": "WIN-REVIEWER-ALPHA",
+          "wave_id": "WAVE-R2"
+        }
+      }
+    ],
+    "unscheduled_components": [],
+    "total_scheduled": 2,
+    "total_unscheduled": 0,
+    "summary": {
+      "windows": 2,
+      "waves": 2,
+      "scheduled": 2,
+      "unscheduled": 0,
+      "errors": 0,
+      "warnings": 0
+    }
+  },
+  "logs": [
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[schedule] Starting execution",
+      "extra": {
+        "run_id": "RUN-20260612093849-1d4ceb8f"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "storage",
+      "message": "Loaded manifest from C:\\Users\\admin\\AppData\\Local\\Temp\\1\\reviewer_own_manifest.json",
+      "extra": {
+        "components": 2
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "policy_loader",
+      "message": "No policy file found - using built-in defaults",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "cmd.schedule",
+      "message": "Loaded 2 windows from manifest",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "cmd.schedule",
+      "message": "Loaded 2 waves from manifest",
+      "extra": null
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "Starting validation",
+      "extra": {
+        "release_id": "REL-REVIEWER-OWN"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "WARNING",
+      "module": "validator",
+      "message": "[CHECKSUM_DECLARATION_INCOMPLETE] Component base-lib has incomplete artifact/path declaration",
+      "extra": {
+        "component": "base-lib"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "WARNING",
+      "module": "validator",
+      "message": "[CHECKSUM_DECLARATION_INCOMPLETE] Component web-app has incomplete artifact/path declaration",
+      "extra": {
+        "component": "web-app"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[APPROVAL_OK] Component base-lib approved by: alice@corp.com",
+      "extra": {
+        "component": "base-lib"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "[APPROVAL_OK] Component web-app approved by: bob@corp.com",
+      "extra": {
+        "component": "web-app"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "validator",
+      "message": "Validation complete",
+      "extra": {
+        "passed": true,
+        "total": 4,
+        "errors": 0,
+        "warnings": 2
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "scheduler",
+      "message": "Starting scheduling",
+      "extra": {
+        "release_id": "REL-REVIEWER-OWN",
+        "windows": 2,
+        "waves": 2
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "scheduler",
+      "message": "[COMPONENT_SCHEDULED] Scheduled base-lib v1.0.0 into Reviewer Alpha Window wave First Wave",
+      "extra": {
+        "component": "base-lib"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "scheduler",
+      "message": "[COMPONENT_SCHEDULED] Scheduled web-app v2.0.0 into Reviewer Alpha Window wave Second Wave",
+      "extra": {
+        "component": "web-app"
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "scheduler",
+      "message": "Scheduling complete",
+      "extra": {
+        "schedule_id": "SCHED-20260612093849-6203267c",
+        "scheduled": 2,
+        "unscheduled": 0,
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "timestamp": "2026-06-12T09:38:49Z",
+      "level": "INFO",
+      "module": "cli",
+      "message": "[schedule] Finished",
+      "extra": {
+        "run_id": "RUN-20260612093849-1d4ceb8f",
+        "exit_code": 0
+      }
+    }
+  ],
+  "archive_path": null
+}

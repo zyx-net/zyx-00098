@@ -12,6 +12,8 @@ from ..core.scheduler import (
     load_waves_from_json,
     load_windows_from_csv,
     load_windows_from_json,
+    load_window_state,
+    save_window_state,
     validate_and_schedule,
 )
 from ..core.validator import ValidationEngine
@@ -118,13 +120,13 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
     manifest_windows = getattr(manifest, "release_windows", None)
     if manifest_windows and not windows:
         from ..core.models import ReleaseWindow as RW
-        windows = [RW.from_dict(w) for w in manifest_windows]
+        windows = [RW.from_dict(w) if isinstance(w, dict) else w for w in manifest_windows]
         LOG.info(MODULE, f"Loaded {len(windows)} windows from manifest")
 
     manifest_waves = getattr(manifest, "waves", None)
     if manifest_waves:
         from ..core.models import Wave as W
-        waves = [W.from_dict(w) for w in manifest_waves]
+        waves = [W.from_dict(w) if isinstance(w, dict) else w for w in manifest_waves]
         LOG.info(MODULE, f"Loaded {len(waves)} waves from manifest")
 
     if args.waves:
@@ -136,6 +138,9 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
         except ValueError as exc:
             LOG.error(MODULE, f"Invalid waves config: {exc}")
             return CommandResult(exit_code=EXIT_CONFIG_ERROR.code, run_id="")
+
+    if windows:
+        load_window_state(windows, base=getattr(args, "work_dir", None))
 
     policy_dict = policy.to_dict()
 
@@ -192,6 +197,7 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
         extra_artifacts={
             "policy_snapshot": policy_dict,
             "schedule_result": schedule_dict,
+            "schedule_summary": _format_schedule_summary(schedule),
         },
     )
 
@@ -223,6 +229,7 @@ def _handle_lock(
 
     exit_code = EXIT_OK.code if success else EXIT_WINDOW_LOCKED.code
     if success:
+        save_window_state(windows, base=getattr(args, "work_dir", None))
         result = ScheduleResult(
             schedule_id="",
             generated_at="",

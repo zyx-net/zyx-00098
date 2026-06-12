@@ -167,6 +167,7 @@ def persist_run_artifacts(
         release_plan=release_plan,
         rollback_plan=rollback_plan,
         dry_run_result=dry_run_result,
+        schedule_result=schedule_result,
         logs=logs_entries or [],
     )
     save_json(snapshot.to_dict(), run_dir / SNAPSHOT_FILE)

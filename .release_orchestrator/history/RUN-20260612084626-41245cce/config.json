@@ -1,0 +1,16 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "plan",
+    "manifest": "examples/clean_manifest.json",
+    "policy": null,
+    "output": "examples/plan_with_schedule.json",
+    "skip_validate": false,
+    "windows": "examples/windows_config.json",
+    "waves": "examples/windows_config.json",
+    "func": "<function _run at 0x0000024E053F2A30>"
+  },
+  "command": "plan",
+  "run_id": "RUN-20260612084626-41245cce"
+}

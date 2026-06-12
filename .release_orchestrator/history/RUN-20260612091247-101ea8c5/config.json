@@ -1,0 +1,19 @@
+{
+  "args": {
+    "verbose": false,
+    "work_dir": null,
+    "command": "export",
+    "manifest": "D:\\workSpace\\AI__SPACE\\zyx-00098\\examples\\clean_manifest.json",
+    "policy": null,
+    "output": "D:\\workSpace\\AI__SPACE\\zyx-00098\\archives\\regression_export_bundle",
+    "format": "zip",
+    "no_dryrun": false,
+    "seed": null,
+    "compare_with": null,
+    "windows": null,
+    "waves": null,
+    "func": "<function _run at 0x000002C22FD5D170>"
+  },
+  "command": "export",
+  "run_id": "RUN-20260612091247-101ea8c5"
+}

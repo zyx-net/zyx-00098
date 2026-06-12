@@ -7,6 +7,7 @@ from typing import Any
 
 from .base import CommandResult
 from ..core.planner import ReleasePlanner
+from ..core.scheduler import SchedulingEngine, load_waves_from_json, load_windows_from_json, load_window_state
 from ..core.validator import ValidationEngine
 from ..utils.exit_codes import (
     EXIT_CONFIG_ERROR,
@@ -32,6 +33,10 @@ def add_parser(subparsers: "argparse._SubParsersAction") -> None:
                    help="Write plan JSON to this file in addition to stdout")
     p.add_argument("--skip-validate", action="store_true",
                    help="Skip manifest validation before planning")
+    p.add_argument("-w", "--windows", default=None,
+                   help="Path to windows configuration (JSON or CSV) for scheduling")
+    p.add_argument("--waves", default=None,
+                   help="Path to waves configuration JSON for scheduling")
     p.set_defaults(func=_run)
 
 
@@ -86,9 +91,43 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
     plan_dict = plan.to_dict()
     _print_plan(plan)
 
+    schedule_result = None
+    schedule_dict = None
+    if args.windows or (hasattr(manifest, "release_windows") and manifest.release_windows):
+        windows = []
+        if args.windows:
+            if args.windows.lower().endswith(".csv"):
+                from ..core.scheduler import load_windows_from_csv
+                windows = load_windows_from_csv(args.windows)
+            else:
+                windows = load_windows_from_json(args.windows)
+        elif hasattr(manifest, "release_windows"):
+            windows = manifest.release_windows
+
+        if windows:
+            waves = None
+            if args.waves:
+                waves = load_waves_from_json(args.waves)
+            elif hasattr(manifest, "waves") and manifest.waves:
+                waves = manifest.waves
+
+            load_window_state(windows, base=getattr(args, "work_dir", None))
+
+            scheduler = SchedulingEngine(manifest, windows, waves, policy, validation)
+            schedule_result = scheduler.schedule()
+            schedule_dict = schedule_result.to_dict()
+            exit_code = scheduler.determine_exit_code() or exit_code
+            _print_schedule_summary(schedule_result)
+
+            _merge_schedule_into_plan(plan_dict, schedule_result)
+
     if args.output:
         save_json(plan_dict, Path(args.output))
         print(f"\nPlan written to: {args.output}")
+
+    extra = {"policy_snapshot": policy_dict}
+    if schedule_dict:
+        extra["schedule_result"] = schedule_dict
 
     return CommandResult(
         exit_code=exit_code,
@@ -96,7 +135,8 @@ def _run(args: argparse.Namespace, **_: Any) -> CommandResult:
         manifest_snapshot=manifest.to_dict(),
         validation_result=validation_dict,
         release_plan=plan_dict,
-        extra_artifacts={"policy_snapshot": policy_dict},
+        schedule_result=schedule_dict,
+        extra_artifacts=extra,
     )
 
 
@@ -122,3 +162,44 @@ def _print_plan(plan) -> None:
         print(f"\nBlocked Components Summary:")
         for b in plan.blocked_components:
             print(f"  - {b['component']} v{b['version']}: {', '.join(b['blockers'])}")
+
+
+def _print_schedule_summary(schedule_result) -> None:
+    """Print a short schedule summary alongside the plan."""
+    print(f"\n--- Schedule Summary ---")
+    print(f"Schedule ID : {schedule_result.schedule_id}")
+    print(f"Windows     : {len(schedule_result.windows)}")
+    print(f"Waves       : {len(schedule_result.waves)}")
+    print(f"Scheduled   : {schedule_result.total_scheduled}")
+    print(f"Unscheduled : {schedule_result.total_unscheduled}")
+    if schedule_result.entries:
+        print(f"\nScheduled Components:")
+        for e in schedule_result.entries:
+            wave = f" wave={e.wave_id}" if e.wave_id else ""
+            print(f"  {e.component_name} v{e.component_version} -> {e.window_id}{wave}")
+    if schedule_result.unscheduled_components:
+        print(f"\nUnscheduled Components:")
+        for u in schedule_result.unscheduled_components:
+            reasons = "; ".join(u.get("reasons", []))
+            print(f"  {u['component']} v{u['version']}: {reasons}")
+
+
+def _merge_schedule_into_plan(plan_dict: dict, schedule_result) -> None:
+    """Merge window/wave/schedule info into the plan dict for downstream consumers."""
+    step_map: dict = {}
+    for step in plan_dict.get("steps", []):
+        step_map[step["component_name"]] = step
+
+    for entry in schedule_result.entries:
+        step = step_map.get(entry.component_name)
+        if step:
+            step["window_id"] = entry.window_id
+            step["wave_id"] = entry.wave_id
+            step["scheduled_start"] = entry.scheduled_start
+
+    plan_dict["schedule_id"] = schedule_result.schedule_id
+    plan_dict["schedule_generated_at"] = schedule_result.generated_at
+    plan_dict["total_scheduled"] = schedule_result.total_scheduled
+    plan_dict["total_unscheduled"] = schedule_result.total_unscheduled
+    plan_dict["windows"] = [w.to_dict() if hasattr(w, "to_dict") else w for w in schedule_result.windows]
+    plan_dict["waves"] = [w.to_dict() if hasattr(w, "to_dict") else w for w in schedule_result.waves]

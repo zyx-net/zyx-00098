@@ -1,0 +1,95 @@
+{
+  "summary": {
+    "dry_run_id": "DRY-PLAN-20260612085910-dc4cbe3d",
+    "started_at": "2026-06-12T08:59:10Z",
+    "finished_at": "2026-06-12T08:59:10Z",
+    "total_steps": 4,
+    "successful": 1,
+    "failed": 1,
+    "blocked": 0,
+    "skipped": 2,
+    "exit_code": 16,
+    "deployed": {
+      "common-utils": "2.3.1"
+    },
+    "notes": "This is a simulated execution - no real systems were contacted."
+  },
+  "steps": [
+    {
+      "step_index": 0,
+      "component_name": "common-utils",
+      "component_version": "2.3.1",
+      "action": "deploy",
+      "status": "success",
+      "started_at": "2026-06-12T08:59:10Z",
+      "finished_at": "2026-06-12T08:59:10Z",
+      "rollback_target": "2.2.0",
+      "approver": "alice@corp.com",
+      "prerequisites": [],
+      "blockers": [],
+      "logs": [
+        "Applying: common-utils@2.3.1",
+        "Stored rollback target: 2.2.0",
+        "Release approved by: alice@corp.com",
+        "SUCCESS: common-utils deployed in simulated environment"
+      ]
+    },
+    {
+      "step_index": 1,
+      "component_name": "auth-service",
+      "component_version": "1.5.0",
+      "action": "deploy",
+      "status": "failed",
+      "started_at": "2026-06-12T08:59:10Z",
+      "finished_at": "2026-06-12T08:59:10Z",
+      "rollback_target": "1.4.2",
+      "approver": "bob@corp.com",
+      "prerequisites": [
+        "common-utils"
+      ],
+      "blockers": [],
+      "logs": [
+        "FAILED: simulated deployment error (roll=0.014)"
+      ]
+    },
+    {
+      "step_index": 2,
+      "component_name": "order-service",
+      "component_version": "3.1.0",
+      "action": "deploy",
+      "status": "skipped",
+      "started_at": "2026-06-12T08:59:10Z",
+      "finished_at": "2026-06-12T08:59:10Z",
+      "rollback_target": "3.0.4",
+      "approver": "carol@corp.com",
+      "prerequisites": [
+        "common-utils",
+        "auth-service"
+      ],
+      "blockers": [],
+      "logs": [
+        "SKIPPED: prerequisites not met: auth-service"
+      ]
+    },
+    {
+      "step_index": 3,
+      "component_name": "payment-service",
+      "component_version": "2.0.2",
+      "action": "deploy",
+      "status": "skipped",
+      "started_at": "2026-06-12T08:59:10Z",
+      "finished_at": "2026-06-12T08:59:10Z",
+      "rollback_target": "2.0.1",
+      "approver": "dave@corp.com",
+      "prerequisites": [
+        "common-utils",
+        "order-service"
+      ],
+      "blockers": [],
+      "logs": [
+        "SKIPPED: prerequisites not met: order-service"
+      ]
+    }
+  ],
+  "logs": []
+}

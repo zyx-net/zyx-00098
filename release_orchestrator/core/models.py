@@ -163,6 +163,8 @@ class ReleaseManifest:
     description: Optional[str] = None
     created_by: Optional[str] = None
     created_at: Optional[str] = None
+    release_windows: List[ReleaseWindow] = field(default_factory=list)
+    waves: List[Wave] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
@@ -172,6 +174,8 @@ class ReleaseManifest:
             else self.target_environment
         )
         d["components"] = [c.to_dict() if isinstance(c, Component) else c for c in self.components]
+        d["release_windows"] = [w.to_dict() if isinstance(w, ReleaseWindow) else w for w in self.release_windows]
+        d["waves"] = [w.to_dict() if isinstance(w, Wave) else w for w in self.waves]
         return d
 
     def to_json(self, indent: int = 2) -> str:
@@ -186,6 +190,14 @@ class ReleaseManifest:
             Component.from_dict(c) if isinstance(c, dict) else c
             for c in data.get("components", [])
         ]
+        release_windows = [
+            ReleaseWindow.from_dict(w) if isinstance(w, dict) else w
+            for w in data.get("release_windows", [])
+        ]
+        waves = [
+            Wave.from_dict(w) if isinstance(w, dict) else w
+            for w in data.get("waves", [])
+        ]
         return cls(
             manifest_version=data.get("manifest_version", "1.0"),
             release_id=data.get("release_id", ""),
@@ -196,6 +208,8 @@ class ReleaseManifest:
             description=data.get("description"),
             created_by=data.get("created_by"),
             created_at=data.get("created_at"),
+            release_windows=release_windows,
+            waves=waves,
         )
 
     @classmethod

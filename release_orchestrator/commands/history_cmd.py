@@ -120,6 +120,7 @@ def _show_run(args: argparse.Namespace) -> CommandResult:
     _section("Release plan", snap.release_plan is not None)
     _section("Rollback plan", snap.rollback_plan is not None)
     _section("Dry-run result", snap.dry_run_result is not None)
+    _section("Schedule result", snap.schedule_result is not None)
     _section("Logs", bool(snap.logs))
     if snap.archive_path:
         print(f"   YES  Export archive: {snap.archive_path}")
@@ -136,6 +137,24 @@ def _show_run(args: argparse.Namespace) -> CommandResult:
         blocked = rp.get("blocked_components", [])
         if blocked:
             print(f"Blocked components: {len(blocked)}")
+
+    if snap.schedule_result:
+        sr = snap.schedule_result
+        print(f"\nSchedule summary:")
+        print(f"  Schedule ID   : {sr.get('schedule_id', 'unknown')}")
+        print(f"  Windows       : {len(sr.get('windows', []))}")
+        print(f"  Waves         : {len(sr.get('waves', []))}")
+        print(f"  Scheduled     : {sr.get('total_scheduled', 0)}")
+        print(f"  Unscheduled   : {sr.get('total_unscheduled', 0)}")
+        entries = sr.get("entries", [])
+        if entries:
+            print(f"  Components:")
+            for e in entries[:10]:
+                wave = f" wave {e.get('wave_id', '?')}" if e.get('wave_id') else ""
+                print(f"    - {e.get('component_name', '?')} v{e.get('component_version', '?')}"
+                      f" -> {e.get('window_id', '?')}{wave}")
+            if len(entries) > 10:
+                print(f"    ... and {len(entries) - 10} more")
 
     if snap.policy_summary:
         ps = snap.policy_summary
